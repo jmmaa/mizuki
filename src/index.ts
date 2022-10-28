@@ -56,7 +56,6 @@ const mizuki = (options?: MizukiOptions) => {
   const globalOptions = ensureOptions(options);
 
   let index: number = globalOptions.init;
-  let pause: boolean = false;
 
   let timeout: any | null = null;
 
