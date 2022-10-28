@@ -84,7 +84,7 @@ decrementButton.addEventListener("click", () => {
 });
 ```
 
-### With React
+### With React (there will be a hook for this in the future)
 
 ```tsx
 import mizuki from "mizuki";
