@@ -11,6 +11,9 @@
     "dev": "npx tsc --watch"
   },
   "author": "jmmaa",
+  "repository": {
+    "url": "https://github.com/jmmaa/mizuki"
+  },
   "license": "MIT",
   "type": "module",
   "private": false,
