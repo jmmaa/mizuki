@@ -5,7 +5,7 @@ import mizuki from "mizuki"
 const mzk = mizuki()
 
 // initialize controls and config to create getters and setters
-const  [get, set] = mzk({delay: 500})
+const  [get, set] = mzk({delay: 1000, min: 0, max: 3})
 
 
 const incrementButton =document.querySelector(".inc")

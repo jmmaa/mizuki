@@ -74,24 +74,26 @@ const mizuki = (options?: MizukiOptions) => {
     const set = (cb: (index: number) => number) => {
       if (pause) return;
 
-      pause = true;
-
       let newIndex = cb(index);
 
       if (min !== undefined && max !== undefined) {
         if (min <= newIndex && max >= newIndex) {
           index = newIndex;
+          pause = true;
         } else if (min > newIndex) {
           if (loop) {
             index = max;
+            pause = true;
           }
         } else if (max < newIndex) {
           if (loop) {
             index = min;
+            pause = true;
           }
         }
       } else {
         index = newIndex;
+        pause = true;
       }
 
       setTimeout(() => {
