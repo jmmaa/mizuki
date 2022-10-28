@@ -55,8 +55,10 @@ const ensureOptions = (options?: MizukiOptions): DefaultMizukiOptions => {
 const mizuki = (options?: MizukiOptions) => {
   const globalOptions = ensureOptions(options);
 
-  let pause: boolean = false;
   let index: number = globalOptions.init;
+  let pause: boolean = false;
+
+  let timeout: any | null = null;
 
   return (
     options?: MizukiOptions
@@ -72,33 +74,39 @@ const mizuki = (options?: MizukiOptions) => {
     };
 
     const set = (cb: (index: number) => number) => {
-      if (pause) return;
+      const timeoutStart = () => {
+        timeout = setTimeout(() => {
+          timeout = null;
+        }, delay);
+      };
 
       let newIndex = cb(index);
 
-      if (min !== undefined && max !== undefined) {
-        if (min <= newIndex && max >= newIndex) {
-          index = newIndex;
-          pause = true;
-        } else if (min > newIndex) {
-          if (loop) {
-            index = max;
-            pause = true;
+      if (timeout === null) {
+        if (min !== undefined && max !== undefined) {
+          if (min <= newIndex && max >= newIndex) {
+            index = newIndex;
+            timeoutStart();
           }
-        } else if (max < newIndex) {
-          if (loop) {
-            index = min;
-            pause = true;
-          }
-        }
-      } else {
-        index = newIndex;
-        pause = true;
-      }
 
-      setTimeout(() => {
-        pause = false;
-      }, delay);
+          if (newIndex < min) {
+            if (loop) {
+              index = max;
+              timeoutStart();
+            }
+          }
+
+          if (newIndex > max) {
+            if (loop) {
+              index = min;
+              timeoutStart();
+            }
+          }
+        } else {
+          index = newIndex;
+          timeoutStart();
+        }
+      }
     };
 
     return [get, set];
