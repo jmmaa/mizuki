@@ -1,19 +1,18 @@
 import mizuki from "mizuki";
 import React from "react";
 
-// declare mizuki engines
-
-const slowMizuki = mizuki();
-
 export default function Scroller() {
   const [index, setIndex] = React.useState(0);
 
-  const [get, set] = React.useMemo(
+  const { get, set } = React.useMemo(
+    // needs useMemo to avoid cleanup on index
     () =>
-      slowMizuki({
+      mizuki({
         delay: 1000,
-        min: 0,
-        max: 3,
+        bounds: {
+          min: 0,
+          max: 3,
+        },
         init: 0,
         loop: false,
       }),
@@ -22,43 +21,36 @@ export default function Scroller() {
 
   const offsets = [0, -100, -200, -300];
 
-  const next = () => {
-    set((idx) => idx + 1);
-    setIndex(get());
-  };
-
-  const prev = () => {
-    set((idx) => idx - 1);
-    setIndex(get());
-  };
-
   const wheelHandler = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.deltaY > 0) {
-      next();
+      set((idx) => idx + 1);
+      setIndex(get()); // needs setState to trigger a rerender
     } else if (e.deltaY < 0) {
-      prev();
+      set((idx) => idx - 1);
+      setIndex(get());
     }
   };
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflowY: "hidden" }}>
       <div
+        onWheel={wheelHandler}
         style={{
           transform: `translateY(${offsets[index]}vh)`,
           transitionDuration: "1s",
+          transition: "all 1s ease",
         }}
-        onWheel={wheelHandler}
       >
-        <div style={{ width: "100vw", height: "100vh", background: "red" }}>
+        <div style={{ width: "100vw", height: "100vh", background: "#ff5f45" }}>
           Kanade
         </div>
-        <div style={{ width: "100vw", height: "100vh", background: "green" }}>
+        <div style={{ width: "100vw", height: "100vh", background: "#0798ec" }}>
           Mafuyu
         </div>
-        <div style={{ width: "100vw", height: "100vh", background: "blue" }}>
+        <div style={{ width: "100vw", height: "100vh", background: "#fc6c7c" }}>
           Ena
         </div>
-        <div style={{ width: "100vw", height: "100vh", background: "yellow" }}>
+        <div style={{ width: "100vw", height: "100vh", background: "#fec401" }}>
           Mizuki
         </div>
       </div>
