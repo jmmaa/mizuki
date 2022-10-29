@@ -58,14 +58,12 @@ console.log(get()); // 3
 
 ### With vanilla JS
 
-```ts
+```js
+import "./style.css";
 import mizuki from "mizuki";
 
-// initialize mizuki to create throttle and index context
-const mzk = mizuki();
-
-// initialize controls and config to create getters and setters
-const [get, set] = mzk({ delay: 500 });
+// config
+const { get, set } = mizuki({ delay: 1000, min: 0, max: 3 });
 
 const incrementButton = document.querySelector(".inc");
 const decrementButton = document.querySelector(".dec");
@@ -90,69 +88,59 @@ decrementButton.addEventListener("click", () => {
 import mizuki from "mizuki";
 import React from "react";
 
-// declare mizuki engines
-const fastMizuki = mizuki({ delay: 100, max: 3, min: -3, init: 2, loop: true }); // globally
-const slowMizuki = mizuki();
+export default function Scroller() {
+  const [index, setIndex] = React.useState(0);
 
-// instantiate engines to be used all over the app
-
-function App() {
-  const [fastIndex, fastSetIndex] = React.useState<number>(0);
-  const [slowIndex, slowSetIndex] = React.useState<number>(0);
-
-  // getters and setters
-  const [fastGet, fastSet] = React.useMemo(() => fastMizuki(), []);
-  const [slowGet, slowSet] = React.useMemo(
+  const { get, set } = React.useMemo(
+    // needs useMemo to avoid cleanup on index
     () =>
-      slowMizuki({
-        delay: 500,
-        min: 0,
-        max: 3,
-        init: 3,
-        loop: true,
-      }), // dynamically
+      mizuki({
+        delay: 1000,
+        bounds: {
+          min: 0,
+          max: 3,
+        },
+        init: 0,
+        loop: false,
+      }),
     []
   );
 
-  // init
-  React.useEffect(() => {
-    fastSetIndex(fastGet());
-    slowSetIndex(slowGet());
-  }, []);
+  const offsets = [0, -100, -200, -300];
 
-  const fastIncrement = () => {
-    fastSet((idx) => idx + 1); // this is non-reactive
-    fastSetIndex(fastGet()); // setState to rerender
+  const wheelHandler = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.deltaY > 0) {
+      set((idx) => idx + 1);
+      setIndex(get()); // needs setState to trigger a rerender
+    } else if (e.deltaY < 0) {
+      set((idx) => idx - 1);
+      setIndex(get());
+    }
   };
 
-  const fastDecrement = () => {
-    fastSet((idx) => idx - 1);
-    fastSetIndex(fastGet());
-  };
-
-  const slowIncrement = () => {
-    slowSet((idx) => idx + 1);
-    slowSetIndex(slowGet());
-  };
-
-  const slowDecrement = () => {
-    slowSet((idx) => idx - 1);
-    slowSetIndex(slowGet());
-  };
   return (
-    <div className="App">
-      <div>
-        FAST
-        <button onClick={fastIncrement}>+</button>
-        <button onClick={fastDecrement}>-</button>
+    <div style={{ width: "100vw", height: "100vh", overflowY: "hidden" }}>
+      <div
+        onWheel={wheelHandler}
+        style={{
+          transform: `translateY(${offsets[index]}vh)`,
+          transitionDuration: "1s",
+          transition: "all 1s ease",
+        }}
+      >
+        <div style={{ width: "100vw", height: "100vh", background: "#ff5f45" }}>
+          Kanade
+        </div>
+        <div style={{ width: "100vw", height: "100vh", background: "#0798ec" }}>
+          Mafuyu
+        </div>
+        <div style={{ width: "100vw", height: "100vh", background: "#fc6c7c" }}>
+          Ena
+        </div>
+        <div style={{ width: "100vw", height: "100vh", background: "#fec401" }}>
+          Mizuki
+        </div>
       </div>
-      <div>fast counter: {fastIndex}</div>
-      <div>
-        SLOW
-        <button onClick={slowIncrement}>+</button>
-        <button onClick={slowDecrement}>-</button>
-      </div>
-      <div>slow counter: {slowIndex}</div>
     </div>
   );
 }
