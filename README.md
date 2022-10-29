@@ -1,6 +1,6 @@
 # Mizuki
 
-Mizuki is a tiny javascript library that helps you create your own custom scrollers, carousels, or anything similar. It does not have any dependencies and sizes only at `< 1kb`.
+A _tiny_ javascript library to help you in adding behavior for your custom carousels, swipers, or anything similar.
 
 ### yarn
 
@@ -14,18 +14,31 @@ yarn add mizuki
 npm install mizuki
 ```
 
+# What?
+
+**Mizuki** is a tiny javascript library that helps you create behaviors for custom scrollers, swipers, or anything similar. It is generic enough that it simply focuses on getting and setting a single value `index`, which you can use as a reference for triggering animations.
+
+##### Features
+
+- Simple and minimalistic API
+- No dependencies
+- So tiny, (< 500b, esbuild)
+
+# Why?
+
+If you want it to be less painful to implement your own scroller, fullpage, swiper or what not.
+
+# Whats with the name?
+
+nightcord mizuki fan pog \
+<img src='https://static.wikia.nocookie.net/projectsekai/images/8/8d/Akiyama_Mizuki_school_chibi.png'/>
+
 # How to Use
 
-Mizuki exports a default function that creates another function that references on `index`
+Mizuki exports a default function that returns an object consisting of getter and setter functions.
 
 ```ts
-const mzk = mizuki();
-```
-
-call the function to create the getter and setter functions
-
-```ts
-const [get, set] = mzk();
+const { get, set } = mizuki();
 ```
 
 The `get` function returns the current `index` of mizuki
@@ -43,7 +56,7 @@ set((index) => index + 1); // adds 1 to the index
 A simple flow would be like this
 
 ```ts
-const [get, set] = mzk();
+const { get, set } = mizuki();
 
 console.log(get()); // 0
 
