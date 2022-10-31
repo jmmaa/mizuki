@@ -30,10 +30,16 @@ If you want it to be less painful to implement your own scroller, fullpage, swip
 
 # How to Use
 
-Mizuki exports a default function that returns an object consisting of getter and setter functions.
+Mizuki exports a default function that returns a callback
 
 ```ts
-const { get, set } = mizuki();
+const config = mizuki();
+```
+
+Use the callback for creating your desired setter/getter functions based on options
+
+```ts
+const { get, set } = config({ ...options });
 ```
 
 The `get` function returns the current `index` of mizuki
