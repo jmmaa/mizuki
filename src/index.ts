@@ -18,35 +18,41 @@ type DefaultMizukiOptions = {
   loop: boolean;
 };
 
-const defaultOptions: DefaultMizukiOptions = {
+const defaultOpts: DefaultMizukiOptions = {
   init: 0,
   delay: 0,
   bounds: undefined,
   loop: false,
 };
 
-export const mizuki = (options?: MizukiOptions) => {
-  const __options = options
-    ? { ...defaultOptions, ...options }
-    : defaultOptions;
+const mizuki = () => {
+  let index: number;
 
-  const { init, delay, bounds, loop } = __options;
+  return (options?: MizukiOptions) => {
+    const _options = options ? { ...defaultOpts, ...options } : defaultOpts;
 
-  let index: number = init;
-  let timeout: any | null = null;
+    const { init, delay, bounds, loop } = _options;
 
-  const startTimeout = () => {
-    // check for true non-delay
-    if (delay > 0) {
-      timeout = setTimeout(() => {
-        timeout = null;
-      }, delay);
-    }
-  };
-  return {
-    get: () => index,
-    set: (cb: (index: number) => number) => {
-      let newIndex = cb(index);
+    let timeout: any = null;
+
+    index = index | init;
+
+    const _timeout = () => {
+      if (delay > 0) {
+        timeout = setTimeout(() => {
+          timeout = null;
+        }, delay);
+      }
+    };
+
+    const _set = (setter: number | ((index: number) => number)) => {
+      let newIndex: number;
+
+      if (typeof setter === "number") {
+        newIndex = setter;
+      } else {
+        newIndex = setter(index);
+      }
 
       if (timeout === null) {
         if (bounds !== undefined) {
@@ -54,28 +60,35 @@ export const mizuki = (options?: MizukiOptions) => {
 
           if (min <= newIndex && max >= newIndex) {
             index = newIndex;
-            startTimeout();
+            _timeout();
           }
 
           if (newIndex < min) {
             if (loop) {
               index = max;
-              startTimeout();
+              _timeout();
             }
           }
 
           if (newIndex > max) {
             if (loop) {
               index = min;
-              startTimeout();
+              _timeout();
             }
           }
         } else {
           index = newIndex;
-          startTimeout();
+          _timeout();
         }
       }
-    },
+    };
+
+    const _get = () => index;
+
+    return {
+      get: _get,
+      set: _set,
+    };
   };
 };
 
