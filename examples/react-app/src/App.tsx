@@ -4,12 +4,12 @@ import React from "react";
 const useEngine = (): [number, () => void, () => void] => {
   const [index, setIndex] = React.useState(0);
 
-  const constructor = React.useMemo(() => mizuki(), []);
+  const fullpageConfig = React.useMemo(() => mizuki(), []);
 
   const { get, set } = React.useMemo(
     // needs useMemo to avoid cleanup on index
     () =>
-      constructor({
+      fullpageConfig({
         delay: 1000,
         bounds: {
           min: 0,
