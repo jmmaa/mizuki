@@ -1,13 +1,15 @@
 import mizuki from "mizuki";
 import React from "react";
 
-export default function Scroller() {
+const useEngine = (): [number, () => void, () => void] => {
   const [index, setIndex] = React.useState(0);
+
+  const constructor = React.useMemo(() => mizuki(), []);
 
   const { get, set } = React.useMemo(
     // needs useMemo to avoid cleanup on index
     () =>
-      mizuki({
+      constructor({
         delay: 1000,
         bounds: {
           min: 0,
@@ -19,15 +21,29 @@ export default function Scroller() {
     []
   );
 
+  return [
+    index,
+    () => {
+      set((idx) => idx + 1);
+      setIndex(get());
+    },
+    () => {
+      set((idx) => idx - 1);
+      setIndex(get());
+    },
+  ];
+};
+
+export default function Scroller() {
+  const [index, next, prev] = useEngine();
+
   const offsets = [0, -100, -200, -300];
 
   const wheelHandler = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.deltaY > 0) {
-      set((idx) => idx + 1);
-      setIndex(get()); // needs setState to trigger a rerender
+      next();
     } else if (e.deltaY < 0) {
-      set((idx) => idx - 1);
-      setIndex(get());
+      prev();
     }
   };
 
