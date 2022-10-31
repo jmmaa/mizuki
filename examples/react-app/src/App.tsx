@@ -1,7 +1,10 @@
 import mizuki from "mizuki";
 import React from "react";
 
-const useEngine = (): [number, () => void, () => void] => {
+const useFullpage = (): [
+  number,
+  (e: React.WheelEvent<HTMLDivElement>) => void
+] => {
   const [index, setIndex] = React.useState(0);
 
   const fullpageConfig = React.useMemo(() => mizuki(), []);
@@ -21,31 +24,23 @@ const useEngine = (): [number, () => void, () => void] => {
     []
   );
 
-  return [
-    index,
-    () => {
-      set((idx) => idx + 1);
-      setIndex(get());
-    },
-    () => {
-      set((idx) => idx - 1);
-      setIndex(get());
-    },
-  ];
-};
-
-export default function Scroller() {
-  const [index, next, prev] = useEngine();
-
-  const offsets = [0, -100, -200, -300];
-
   const wheelHandler = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.deltaY > 0) {
-      next();
+      set((idx) => idx + 1);
+      setIndex(get()); // setState is required to force a rerender
     } else if (e.deltaY < 0) {
-      prev();
+      set((idx) => idx - 1);
+      setIndex(get());
     }
   };
+
+  return [index, wheelHandler];
+};
+
+export default function MyFullpage() {
+  const [index, wheelHandler] = useFullpage();
+
+  const offsets = [0, -100, -200, -300];
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflowY: "hidden" }}>
