@@ -28,10 +28,6 @@ npm install mizuki
 
 If you want it to be less painful to implement your own scroller, fullpage, swiper or what not.
 
-# Whats with the name?
-
-nightcord mizuki fan pog \
-<img src='https://static.wikia.nocookie.net/projectsekai/images/8/8d/Akiyama_Mizuki_school_chibi.png'/>
 
 # How to Use
 
@@ -160,3 +156,9 @@ export default function Scroller() {
 
 export default App;
 ```
+
+# Whats with the name?
+
+nightcord mizuki fan pog \
+<img src='https://static.wikia.nocookie.net/projectsekai/images/8/8d/Akiyama_Mizuki_school_chibi.png'/>
+
