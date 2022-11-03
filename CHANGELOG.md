@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+# 1.1.6 (unreleased)
+
+Improvements:
+
+- added benchmark
+
+New:
+
+- hooks API, for full flexible configurations
+
 # 1.0.6 (31/10/2022)
 
 Improvements:
