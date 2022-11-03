@@ -25,70 +25,82 @@ const defaultOpts: DefaultMizukiOptions = {
   loop: false,
 };
 
-const mizuki = () => {
-  let index: number;
+// for version 1.1.6dev
 
-  return (options?: MizukiOptions) => {
-    const _options = options ? { ...defaultOpts, ...options } : defaultOpts;
+const IndexState = (init: number) => {
+  let index: number = init;
 
-    const { init, delay, bounds, loop } = _options;
+  const _set = (value: number) => {
+    index = value;
+  };
 
-    let timeout: any = null;
+  const _get = () => index;
 
-    index = index | init;
+  return {
+    get: _get,
+    set: _set,
+  };
+};
 
-    const _timeout = () => {
-      if (delay > 0) {
-        timeout = setTimeout(() => {
-          timeout = null;
-        }, delay);
+const TimeoutState = () => {
+  let timeout: any = null;
+
+  const _timeout = (delay: number) => {
+    if (delay > 0) {
+      timeout = setTimeout(() => {
+        timeout = null;
+      }, delay);
+    }
+  };
+
+  return {
+    get: () => timeout,
+    set: _timeout,
+  };
+};
+
+const mizuki = (options?: MizukiOptions) => {
+  const _options = options ? { ...defaultOpts, ...options } : defaultOpts;
+  const { init, delay, bounds, loop } = _options;
+
+  const index = IndexState(init);
+  const timeout = TimeoutState();
+
+  const _set = (setter: number | ((index: number) => number)) => {
+    let newIndex: number;
+
+    if (typeof setter === "number") {
+      newIndex = setter;
+    } else {
+      newIndex = setter(index.get());
+    }
+
+    if (timeout.get() !== null) return;
+
+    if (bounds !== undefined) {
+      const { min, max } = bounds;
+
+      if (min <= newIndex && max >= newIndex) {
+        index.set(newIndex);
+        timeout.set(delay);
+      } else if (loop && newIndex < min) {
+        index.set(max);
+        timeout.set(delay);
+      } else if (loop && newIndex > max) {
+        index.set(min);
+        timeout.set(delay);
       }
-    };
+    } else {
+      index.set(newIndex);
+      timeout.set(delay);
+    }
+  };
 
-    const _set = (setter: number | ((index: number) => number)) => {
-      let newIndex: number;
+  const _get = () => index.get();
 
-      if (typeof setter === "number") {
-        newIndex = setter;
-      } else {
-        newIndex = setter(index);
-      }
-
-      if (timeout === null) {
-        if (bounds !== undefined) {
-          const { min, max } = bounds;
-
-          if (min <= newIndex && max >= newIndex) {
-            index = newIndex;
-            _timeout();
-          }
-
-          if (newIndex < min) {
-            if (loop) {
-              index = max;
-              _timeout();
-            }
-          }
-
-          if (newIndex > max) {
-            if (loop) {
-              index = min;
-              _timeout();
-            }
-          }
-        } else {
-          index = newIndex;
-          _timeout();
-        }
-      }
-    };
-
-    const _get = () => index;
-
-    return {
-      get: _get,
-      set: _set,
-    };
+  return {
+    set: _set,
+    get: _get,
   };
 };
 
