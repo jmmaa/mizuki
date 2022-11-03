@@ -3,8 +3,7 @@ import mizuki from "../src/index";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 test("get/set functions", () => {
-  const engine = mizuki();
-  const { get, set } = engine();
+  const { get, set } = mizuki();
 
   expect(get()).toEqual(0);
   set((index) => index + 1);
@@ -19,8 +18,7 @@ test("get/set functions", () => {
 });
 
 test("for using delay", async () => {
-  const engine = mizuki();
-  const { get, set } = engine({ delay: 1000 });
+  const { get, set } = mizuki({ delay: 1000 });
 
   expect(get()).toEqual(0);
   set((index) => index + 1);
@@ -36,8 +34,7 @@ test("for using delay", async () => {
 });
 
 test("for using bounds", () => {
-  const engine = mizuki();
-  const { get, set } = engine({ bounds: { min: 0, max: 3 } });
+  const { get, set } = mizuki({ bounds: { min: 0, max: 3 } });
 
   expect(get()).toEqual(0);
 
@@ -63,8 +60,7 @@ test("for using bounds", () => {
 });
 
 test("for using loop", () => {
-  const engine = mizuki();
-  const { get, set } = engine({ bounds: { min: 0, max: 3 }, loop: true });
+  const { get, set } = mizuki({ bounds: { min: 0, max: 3 }, loop: true });
 
   expect(get()).toEqual(0);
 
@@ -83,18 +79,37 @@ test("for using loop", () => {
   expect(get()).toEqual(3);
 });
 
-test("benchmark", () => {
-  const engine = mizuki();
+test("without destructuring mizuki", () => {
+  const myEngine = mizuki({ bounds: { min: 0, max: 3 }, loop: true });
+  expect(myEngine.get()).toEqual(0);
 
+  myEngine.set((index) => index + 1);
+  myEngine.set((index) => index + 1);
+  myEngine.set((index) => index + 1);
+
+  expect(myEngine.get()).toEqual(3);
+
+  myEngine.set((index) => index + 1);
+
+  expect(myEngine.get()).toEqual(0);
+
+  myEngine.set((index) => index - 1);
+
+  expect(myEngine.get()).toEqual(3);
+});
+
+test("benchmark set/get calls", () => {
   let start = performance.now();
-  const { set } = engine({ bounds: { min: 0, max: 3 }, loop: true });
+
+  const { get, set } = mizuki({ bounds: { min: 0, max: 3 }, loop: true });
   const count = 100_000_000;
 
   for (let i = 0; i < count; i++) {
     set((index) => index + 1);
+    get();
   }
 
   let end = performance.now();
 
-  console.log(`time it took for ${count} set calls: ${end - start}ms`);
+  console.log(`time it took for ${count} set and get calls: ${end - start}ms`);
 });
