@@ -8,10 +8,9 @@
     "dist/"
   ],
   "scripts": {
-    "build": "npx del-cli --force './dist/*' && tsc && esbuild --bundle dist/index.js --minify --outfile=dist/index.js --allow-overwrite --format=esm",
+    "build": "npx del-cli --force './dist/*' && tsc && esbuild --bundle src/index.ts --outfile=dist/index.js --minify --format=esm",
     "dev": "npx tsc --watch",
-    "test": "jest",
-    "start": "npx ts-node src/index.ts"
+    "test": "jest"
   },
   "author": "jmmaa",
   "repository": {
