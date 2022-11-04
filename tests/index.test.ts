@@ -3,7 +3,7 @@ import mizuki from "../src/index";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 test("get/set functions", () => {
-  const { get, set } = mizuki();
+  const { get, set } = mizuki.vanilla();
 
   expect(get()).toEqual(0);
   set((index) => index + 1);
@@ -18,7 +18,7 @@ test("get/set functions", () => {
 });
 
 test("for using delay", async () => {
-  const { get, set } = mizuki({ delay: 1000 });
+  const { get, set } = mizuki.vanilla({ delay: 1000 });
 
   expect(get()).toEqual(0);
   set((index) => index + 1);
@@ -27,14 +27,14 @@ test("for using delay", async () => {
   set((index) => index - 1);
   expect(get()).toEqual(1);
 
-  await sleep(1000);
+  await sleep(1100);
   set((index) => index - 1);
 
   expect(get()).toEqual(0);
 });
 
 test("for using bounds", () => {
-  const { get, set } = mizuki({ bounds: { min: 0, max: 3 } });
+  const { get, set } = mizuki.vanilla({ bounds: { min: 0, max: 3 } });
 
   expect(get()).toEqual(0);
 
@@ -60,7 +60,10 @@ test("for using bounds", () => {
 });
 
 test("for using loop", () => {
-  const { get, set } = mizuki({ bounds: { min: 0, max: 3 }, loop: true });
+  const { get, set } = mizuki.vanilla({
+    bounds: { min: 0, max: 3 },
+    loop: true,
+  });
 
   expect(get()).toEqual(0);
 
@@ -77,10 +80,16 @@ test("for using loop", () => {
   set((index) => index - 1);
 
   expect(get()).toEqual(3);
+
+  set(5);
+  expect(get()).toEqual(1);
+
+  set((index) => index - 3);
+  expect(get()).toEqual(2);
 });
 
 test("without destructuring mizuki", () => {
-  const myEngine = mizuki({ bounds: { min: 0, max: 3 }, loop: true });
+  const myEngine = mizuki.vanilla({ bounds: { min: 0, max: 3 }, loop: true });
   expect(myEngine.get()).toEqual(0);
 
   myEngine.set((index) => index + 1);
@@ -99,17 +108,65 @@ test("without destructuring mizuki", () => {
 });
 
 test("benchmark set/get calls", () => {
-  let start = performance.now();
+  const { get, set } = mizuki.vanilla({
+    bounds: { min: 0, max: 3 },
+    loop: true,
+  });
+  const count = 10_000_000;
 
-  const { get, set } = mizuki({ bounds: { min: 0, max: 3 }, loop: true });
-  const count = 100_000_000;
+  let setCallsTimeTotal = 0;
+  let getCallsTimeTotal = 0;
 
   for (let i = 0; i < count; i++) {
-    set((index) => index + 1);
-    get();
+    let setStart = performance.now();
+    set((index) => index * Math.random());
+    let setEnd = performance.now();
+    let setRes = setEnd - setStart;
+
+    setCallsTimeTotal += setRes;
   }
 
-  let end = performance.now();
+  for (let i = 0; i < count; i++) {
+    let getStart = performance.now();
+    get();
+    let getEnd = performance.now();
+    let getRes = getEnd - getStart;
+    getCallsTimeTotal += getRes;
+  }
 
-  console.log(`time it took for ${count} set and get calls: ${end - start}ms`);
+  console.log(`time it took for ${count} set calls: ${setCallsTimeTotal}ms`);
+
+  console.log(`time it took for ${count} get calls: ${getCallsTimeTotal}ms`);
+});
+
+test("benchmark set/get calls using loop ", () => {
+  const { get, set } = mizuki.vanilla({
+    bounds: { min: 0, max: 3 },
+    loop: true,
+  });
+  const count = 10_000_000;
+
+  let setCallsTimeTotal = 0;
+  let getCallsTimeTotal = 0;
+
+  for (let i = 0; i < count; i++) {
+    let setStart = performance.now();
+    set((index) => index + 5);
+    let setEnd = performance.now();
+    let setRes = setEnd - setStart;
+
+    setCallsTimeTotal += setRes;
+  }
+
+  for (let i = 0; i < count; i++) {
+    let getStart = performance.now();
+    get();
+    let getEnd = performance.now();
+    let getRes = getEnd - getStart;
+    getCallsTimeTotal += getRes;
+  }
+
+  console.log(`time it took for ${count} set calls: ${setCallsTimeTotal}ms`);
+
+  console.log(`time it took for ${count} get calls: ${getCallsTimeTotal}ms`);
 });
