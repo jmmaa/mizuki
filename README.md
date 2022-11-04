@@ -1,6 +1,6 @@
 # Mizuki
 
-A _tiny_ javascript library to help you in adding behavior for your custom carousels, swipers, or anything similar.
+A javascript library for building your own paginated component
 
 ### yarn
 
@@ -16,13 +16,13 @@ npm install mizuki
 
 # What?
 
-**Mizuki** is a tiny javascript library that helps you create behaviors for custom scrollers, swipers, or anything similar. It is generic enough that it simply focuses on getting and setting a single value `index`, which you can use as a reference for triggering animations.
+**Mizuki** is a javascript library that helps you create behaviors for your custom paginated components. It uses variety of functions and handlers to help you build your own custom pagination behavior.
 
 ##### Features
 
 - Simple and minimalistic API
 - No dependencies
-- So tiny, (< 500b, esbuild)
+- tiny, (1.2kb, esbuild)
 
 # Why?
 
@@ -30,50 +30,44 @@ If you want it to be less painful to implement your own scroller, fullpage, swip
 
 # How to Use
 
-Mizuki exports a default function that returns a callback
+Mizuki exports variety of functions to help you build your own paginated component's engine. Here below is a helper function for creating the index of your pagination which you can set/get the index state.
 
 ```ts
-const config = mizuki();
+// index
+const index = mizuki.createIndexRef(0);
+
+index.get(); // 0 (default)
+index.set((i) => i + 5); // 5
 ```
 
-Use the callback for creating your desired setter/getter functions based on options
+Best way is to use a `handler`, which are some pre-built functions that are composed with `mizuki API`. Here is an example using the built-in `vanilla` handler
 
 ```ts
-const { get, set } = config({ ...options });
-```
+import { vanilla } from "mizuki";
 
-The `get` function returns the current `index` of mizuki
+const { get, set } = vanilla({
+  bounds: { min: 0, max: 3 },
+  loop: true,
+  init: 1,
+});
 
-```ts
+get(); // 1 (initial index)
+
+set(3);
+get(); // 3
+
+set(0);
 get(); // 0
-```
 
-The `set` function takes in a callback to set the `index` of mizuki
-
-```ts
-set((index) => index + 1); // adds 1 to the index
-```
-
-A simple flow would be like this
-
-```ts
-const config = mizuki();
-const { get, set } = config({ ...options });
-
-console.log(get()); // 0 default index
-
-set((index) => index + 5);
-console.log(get()); // 5
-
-set((index) => index - 2);
-console.log(get()); // 3
+set((i) => i - 1);
+get(); // 3 (since loop is set to true, it sets 3 instead)
 ```
 
 # Examples
 
 Examples are in [here](https://github.com/jmmaa/mizuki/tree/main/examples)
 
-# Whats with the name?
+#### Whats with the name?
 
-nightcord mizuki fan pog \
+nightcord mizuki pog \
 <img src='https://static.wikia.nocookie.net/projectsekai/images/8/8d/Akiyama_Mizuki_school_chibi.png' width="125px"/>
