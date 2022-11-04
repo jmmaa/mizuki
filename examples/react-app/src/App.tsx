@@ -1,4 +1,4 @@
-import mizuki from "mizuki";
+import { vanilla } from "mizuki";
 import React from "react";
 
 const useFullpage = (): [
@@ -7,12 +7,9 @@ const useFullpage = (): [
 ] => {
   const [index, setIndex] = React.useState(0);
 
-  const fullpageConfig = React.useMemo(() => mizuki(), []);
-
   const { get, set } = React.useMemo(
-    // needs useMemo to avoid cleanup on index
     () =>
-      fullpageConfig({
+      vanilla({
         delay: 1000,
         bounds: {
           min: 0,
@@ -47,7 +44,7 @@ export default function MyFullpage() {
       <div
         onWheel={wheelHandler}
         style={{
-          transform: `translateY(${offsets[index]}vh)`,
+          transform: `translate3d(0, ${offsets[index]}vh, 0)`,
           transitionDuration: "1s",
           transition: "all 1s ease",
         }}

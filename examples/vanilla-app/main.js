@@ -1,11 +1,10 @@
 import './style.css'
-import mizuki from "mizuki"
+import {vanilla} from "mizuki"
 
-// declare mizuki constructor
-const counterConfig = mizuki()
 
-// declare mizuki engine
-const { get, set } = counterConfig({ delay: 0, bounds: { min: 0, max: 3 }, loop: true, init: 1 })
+
+// declare a handler
+const { get, set } = vanilla({ delay:500, bounds: { min: 0, max: 3 }, loop: true, init: 1 })
 
 // elements
 const incrementButton =document.querySelector(".inc")
@@ -23,6 +22,7 @@ incrementButton.addEventListener("click", () => {
 })
 
 decrementButton.addEventListener("click", () => {
+  
   set((index) => index - 1)
   counter.innerHTML = get()
 
