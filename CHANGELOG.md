@@ -4,11 +4,12 @@
 
 Improvements:
 
-- added benchmark
+- updated examples
+- updated tests
 
 New:
 
-- hooks API, for full flexible configurations
+- mizuki API and handlers, for flexible configurations/custom paginated component engines.
 
 # 1.0.6 (31/10/2022)
 
