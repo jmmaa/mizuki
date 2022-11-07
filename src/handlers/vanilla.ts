@@ -1,4 +1,4 @@
-import { createThrottleRef, createIndexRef } from "../api";
+import { createTimeoutRef, createIndexRef, createIntervalRef } from "../api";
 
 type VanillaOptions = {
   init?: number;
@@ -10,7 +10,7 @@ type VanillaOptions = {
   loop?: boolean;
 };
 
-type DefaultVanillaOptions = {
+type DefaultOptions = {
   init: number;
   delay: number;
   bounds?: {
@@ -20,7 +20,7 @@ type DefaultVanillaOptions = {
   loop: boolean;
 };
 
-const defaultOpts: DefaultVanillaOptions = {
+const defaultOpts: DefaultOptions = {
   init: 0,
   delay: 0,
   bounds: undefined,
@@ -32,9 +32,14 @@ export const vanilla = (options?: VanillaOptions) => {
   const { init, delay, bounds, loop } = _options;
 
   const index = createIndexRef(init);
-  const throttle = createThrottleRef();
+  const indexTimeout = createTimeoutRef();
+
+  const autoplayInterval = createIntervalRef();
+  const autoplayTimeout = createTimeoutRef();
 
   const _set = (setter: number | ((index: number) => number)) => {
+    if (indexTimeout.persists()) return;
+
     let newIndex: number;
 
     if (typeof setter === "number") {
@@ -43,28 +48,26 @@ export const vanilla = (options?: VanillaOptions) => {
       newIndex = setter(index.get());
     }
 
-    if (throttle.isThrottling()) return;
-
     if (bounds !== undefined) {
       const { min, max } = bounds;
 
       if (min <= newIndex && max >= newIndex) {
         index.set(newIndex);
-        throttle.start(delay);
-      } else if (loop && newIndex < min) {
-        const overflow = (Math.abs(newIndex) % max) - 1;
-        index.set(max - overflow);
-
-        throttle.start(delay);
-      } else if (loop && newIndex > max) {
+        indexTimeout.start(delay);
+      } else if (loop) {
         const overflow = (Math.abs(newIndex) % max) - 1;
 
-        index.set(min + overflow);
-        throttle.start(delay);
+        if (newIndex < min) {
+          index.set(max - overflow);
+          indexTimeout.start(delay);
+        } else if (newIndex > max) {
+          index.set(min + overflow);
+          indexTimeout.start(delay);
+        }
       }
     } else {
       index.set(newIndex);
-      throttle.start(delay);
+      indexTimeout.start(delay);
     }
   };
 
@@ -73,5 +76,9 @@ export const vanilla = (options?: VanillaOptions) => {
   return {
     set: _set,
     get: _get,
+    autoplay: {
+      interval: autoplayInterval,
+      timeout: autoplayTimeout,
+    },
   };
 };
