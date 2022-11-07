@@ -107,44 +107,12 @@ test("without destructuring mizuki", () => {
   expect(myEngine.get()).toEqual(3);
 });
 
-test("benchmark set/get calls", () => {
-  const { get, set } = mizuki.vanilla({
-    bounds: { min: 0, max: 3 },
-    loop: true,
-  });
-  const count = 10_000_000;
-
-  let setCallsTimeTotal = 0;
-  let getCallsTimeTotal = 0;
-
-  for (let i = 0; i < count; i++) {
-    let setStart = performance.now();
-    set((index) => index * Math.random());
-    let setEnd = performance.now();
-    let setRes = setEnd - setStart;
-
-    setCallsTimeTotal += setRes;
-  }
-
-  for (let i = 0; i < count; i++) {
-    let getStart = performance.now();
-    get();
-    let getEnd = performance.now();
-    let getRes = getEnd - getStart;
-    getCallsTimeTotal += getRes;
-  }
-
-  console.log(`time it took for ${count} set calls: ${setCallsTimeTotal}ms`);
-
-  console.log(`time it took for ${count} get calls: ${getCallsTimeTotal}ms`);
-});
-
 test("benchmark set/get calls using loop ", () => {
   const { get, set } = mizuki.vanilla({
     bounds: { min: 0, max: 3 },
     loop: true,
   });
-  const count = 10_000_000;
+  const count = 100000;
 
   let setCallsTimeTotal = 0;
   let getCallsTimeTotal = 0;
@@ -166,7 +134,14 @@ test("benchmark set/get calls using loop ", () => {
     getCallsTimeTotal += getRes;
   }
 
-  console.log(`time it took for ${count} set calls: ${setCallsTimeTotal}ms`);
-
-  console.log(`time it took for ${count} get calls: ${getCallsTimeTotal}ms`);
+  console.log(
+    `time it took for ${count} mizuki vanilla set calls: ${Math.round(
+      setCallsTimeTotal
+    )}ms`
+  );
+  console.log(
+    `time it took for ${count} mizuki vanilla get calls: ${Math.round(
+      getCallsTimeTotal
+    )}ms`
+  );
 });
