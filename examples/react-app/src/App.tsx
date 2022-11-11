@@ -1,66 +1,55 @@
-import { vanilla } from "mizuki";
+import mizuki from "mizuki";
+import bezier from "bezier-easing";
 import React from "react";
 
-const useFullpage = (): [
-  number,
-  (e: React.WheelEvent<HTMLDivElement>) => void
-] => {
-  const [index, setIndex] = React.useState(0);
-
-  const { get, set } = React.useMemo(
-    () =>
-      vanilla({
-        delay: 1000,
-        bounds: {
-          min: 0,
-          max: 3,
-        },
-        init: 0,
-        loop: false,
-      }),
-    []
-  );
-
-  const wheelHandler = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (e.deltaY > 0) {
-      set((idx) => idx + 1);
-      setIndex(get()); // setState is required to force a rerender
-    } else if (e.deltaY < 0) {
-      set((idx) => idx - 1);
-      setIndex(get());
-    }
-  };
-
-  return [index, wheelHandler];
-};
+const ease = bezier(0.25, 0.1, 0.25, 1.0);
 
 export default function MyFullpage() {
-  const [index, wheelHandler] = useFullpage();
+  // FIX THIS
 
-  const offsets = [0, -100, -200, -300];
+  let index = 0;
+  let lastVal = 0;
+  let lastTransformVal = 0;
+
+  const set = React.useMemo(() => mizuki.action({ delay: 500 }), []);
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+
+  const wheelHandler = (event: React.WheelEvent) => {
+    if (event.deltaY > 0) {
+      const newIndex = set(index + 1);
+
+      if (newIndex === undefined) return;
+      index = newIndex;
+
+      mizuki.createAnimationFrames((delta) => {
+        let transformValue = lastVal - ease(delta) * 100;
+        if (scrollerRef.current === null) return;
+        scrollerRef.current.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+        lastTransformVal = transformValue;
+      }, 1000);
+    } else if (event.deltaY < 0) {
+      const newIndex = set(index - 1);
+
+      if (newIndex === undefined) return;
+      index = newIndex;
+
+      mizuki.createAnimationFrames((delta) => {
+        let transformValue = lastVal + ease(delta) * 100;
+        if (scrollerRef.current === null) return;
+        scrollerRef.current.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+        lastTransformVal = transformValue;
+      }, 1000);
+    }
+    lastVal = lastTransformVal;
+  };
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflowY: "hidden" }}>
-      <div
-        onWheel={wheelHandler}
-        style={{
-          transform: `translate3d(0, ${offsets[index]}vh, 0)`,
-          transitionDuration: "1s",
-          transition: "all 1s ease",
-        }}
-      >
-        <div style={{ width: "100vw", height: "100vh", background: "#ff5f45" }}>
-          Kanade
-        </div>
-        <div style={{ width: "100vw", height: "100vh", background: "#0798ec" }}>
-          Mafuyu
-        </div>
-        <div style={{ width: "100vw", height: "100vh", background: "#fc6c7c" }}>
-          Ena
-        </div>
-        <div style={{ width: "100vw", height: "100vh", background: "#fec401" }}>
-          Mizuki
-        </div>
+      <div ref={scrollerRef} onWheel={wheelHandler}>
+        <div style={{ width: "100vw", height: "100vh", background: "#ff5f45" }}>Kanade</div>
+        <div style={{ width: "100vw", height: "100vh", background: "#0798ec" }}>Mafuyu</div>
+        <div style={{ width: "100vw", height: "100vh", background: "#fc6c7c" }}>Ena</div>
+        <div style={{ width: "100vw", height: "100vh", background: "#fec401" }}>Mizuki</div>
       </div>
     </div>
   );

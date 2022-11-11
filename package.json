@@ -3,13 +3,18 @@
   "version": "1.1.6-dev",
   "description": "a tiny javascript library that helps you create paginated behavior for your app components.",
   "main": "dist/index.js",
+  "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/"
   ],
   "scripts": {
-    "build": "npx del-cli --force './dist/*' && tsc && esbuild --bundle src/index.ts --outfile=dist/index.js --format=esm --minify",
-    "build-dev": "tsc && esbuild --bundle src/index.ts --outfile=dist/index.js --format=esm",
+    "build-esm": "esbuild --bundle src/index.ts --outfile=dist/index.esm.js --format=esm --minify --tree-shaking=true --target=esnext",
+    "build-esm-dev": "esbuild --bundle src/index.ts --outfile=dist/index.esm.js --format=esm --target=esnext",
+    "build-cjs": "esbuild --bundle src/index.ts --outfile=dist/index.js --format=cjs --minify --tree-shaking=true --target=esnext",
+    "build-cjs-dev": "esbuild --bundle src/index.ts --outfile=dist/index.js --format=cjs --target=esnext",
+    "build-dev": "tsc && yarn build-esm-dev && yarn build-cjs-dev",
+    "build": "npx del-cli --force './dist/*' && tsc && yarn build-esm && yarn build-cjs",
     "dev": "watchexec -i 'src/*' yarn build-dev",
     "test": "jest"
   },
@@ -18,7 +23,6 @@
     "url": "https://github.com/jmmaa/mizuki"
   },
   "license": "MIT",
-  "type": "module",
   "private": false,
   "devDependencies": {
     "@types/jest": "^29.2.0",

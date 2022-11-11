@@ -1,1 +1,0 @@
-export { vanilla } from "./vanilla";

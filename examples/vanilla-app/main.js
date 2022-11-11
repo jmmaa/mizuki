@@ -1,48 +1,53 @@
 import './style.css'
-import {vanilla} from "mizuki"
+import mizuki from "mizuki"
+
+import bezier from 'bezier-easing'
 
 
 
-// declare a handler
-const { get, set, autoplay } = vanilla({ delay:500, bounds: { min: 0, max: 3 }, loop: true, init: 0 , auto: true})
+const ease = bezier(0.25, 0.1, 0.25, 1.0)
 
-// elements
-const incrementButton =document.querySelector(".inc")
-const decrementButton = document.querySelector(".dec")
-const subscribeButton = document.querySelector(".sub")
-const counter = document.querySelector(".counter")
-
+const shift = mizuki.action({ min: 0, max: 3, delay: 1000, loop: false})
+let index = 0
+let lastVal = 0
+let lastTransformVal = 0
+let remaining = 100
 
 
+const scrollerContent = document.querySelector(".scroller-content")
+const scroller = document.querySelector(".scroller")
 
-autoplay.interval.subscribe(() => {
-  if (autoplay.timeout.persists()) return
-  console.log("working")
-  set((index) => index + 1)
-  counter.innerHTML = get() 
+
+scroller.addEventListener("wheel", (e) => {
+
+
+
+  if (e.deltaY > 0) {
+    const newIndex = shift(index + 1)
+
+    if (newIndex === undefined) return
+    index = newIndex
+
+    mizuki.createAnimationFrames((delta) => {
+      let transformValue = lastVal - ease(delta) * 100
+      scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`
+      lastTransformVal = transformValue
+    }, 1000)
+
+  } else if (e.deltaY < 0) {
+    const newIndex = shift(index - 1)
+    
+    if (newIndex === undefined) return
+    index = newIndex
+
+    mizuki.createAnimationFrames((delta) => {
+      let transformValue = lastVal + ease(delta) * 100 
+      scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`
+      lastTransformVal = transformValue
+    }, 1000)
+    
+  }
+  lastVal = lastTransformVal
+  
 })
-
-autoplay.interval.start(2000)
-
-counter.innerHTML = get() // get the initial index
-
-
-incrementButton.addEventListener("click", () => {
-  autoplay.timeout.start(2000)
-  set((index) => index + 1) // set the index
-  counter.innerHTML = get() // update the index
-})
-
-decrementButton.addEventListener("click", () => {
-  autoplay.timeout.start(2000)
-  set((index) => index - 1)
-  counter.innerHTML = get()
-
-})
-
-// subscribeButton.addEventListener("click", () => {
-
-// })
-
-
 

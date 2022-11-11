@@ -1,10 +1,5 @@
-import * as api from "./api";
-import * as handlers from "./handlers";
-
-export const { createIndexRef, createIntervalRef, createTimeoutRef } = api;
-export const { vanilla } = handlers;
+import api from "./api";
 
 export default {
   ...api,
-  ...handlers,
 };
