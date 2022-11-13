@@ -3,7 +3,7 @@ import mizuki from "../src";
 test("create action func", () => {
   let index = 0;
 
-  const act = mizuki.action();
+  const act = mizuki.createAction();
 
   let act1 = act(index + 1);
   index = act1 !== undefined ? act1 : index;
@@ -17,7 +17,7 @@ test("create action func", () => {
 });
 
 test("benchmark create action func", () => {
-  const act = mizuki.action({ delay: 500, min: 0, max: 5, loop: true });
+  const act = mizuki.createAction({ delay: 0, min: 0 });
   let index = 0;
 
   const count = 100_000_000;
@@ -30,5 +30,5 @@ test("benchmark create action func", () => {
 
   let end = performance.now();
 
-  console.log(`time it took to execute ${count} action calls: ${Math.round(end - start)}ms`);
+  console.log(`time it took to execute ${count} action calls: ${Math.round(end - start)}ms, ${index}`);
 });
