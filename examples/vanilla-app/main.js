@@ -13,6 +13,17 @@ const animate = mizuki.createAnimation()
 
 let index = 0
 
+
+scroller.addEventListener("pointerdown", (event) => console.log(event))
+
+scroller.addEventListener("pointerup", (event) => console.log(event))
+
+scroller.addEventListener("pointermove", (event) => {
+
+  console.log(event.clientX)
+
+})
+
 scroller.addEventListener("wheel", (e) => {
 
   if (e.deltaY > 0) {
@@ -21,12 +32,12 @@ scroller.addEventListener("wheel", (e) => {
     if (newIndex === undefined) return
     index = newIndex
 
-    animate((delta, previousTransitionValue) => {
+    animate((delta, prev) => {
 
-      const transitionValue = previousTransitionValue - ease(delta) * 100 
-      scrollerContent.style.transform = `translate3d(0, ${transitionValue}vh, 0)`
+      const frameValue = prev - ease(delta) * 100 
+      scrollerContent.style.transform = `translate3d(0, ${frameValue}vh, 0)`
 
-      return () => transitionValue
+      return () => frameValue
 
     }, 1000)
     
@@ -39,12 +50,12 @@ scroller.addEventListener("wheel", (e) => {
     index = newIndex
 
 
-    animate((delta, previousTransitionValue) => {
+    animate((delta, prev) => {
 
-      const transitionValue = previousTransitionValue + ease(delta) * 100 
-      scrollerContent.style.transform = `translate3d(0, ${transitionValue}vh, 0)`
+      const frameValue = prev + ease(delta) * 100 
+      scrollerContent.style.transform = `translate3d(0, ${frameValue}vh, 0)`
       
-      return () => transitionValue
+      return () => frameValue
 
     }, 1000)
   }

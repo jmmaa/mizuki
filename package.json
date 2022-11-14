@@ -1,7 +1,7 @@
 {
   "name": "mizuki",
-  "version": "1.1.6-dev",
-  "description": "a tiny javascript library that helps you create paginated behavior for your app components.",
+  "version": "2.0.0-dev",
+  "description": "a tiny javascript library that helps you create your own pagination behavior",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",

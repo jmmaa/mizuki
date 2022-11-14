@@ -17,18 +17,32 @@ test("create action func", () => {
 });
 
 test("benchmark create action func", () => {
-  const act = mizuki.createAction({ delay: 0, min: 0 });
+  const act = mizuki.createAction({ delay: 0, min: 0, loop: true, max: 5 });
   let index = 0;
-
   const count = 100_000_000;
-  let start = performance.now();
 
-  for (let i = 0; i < count; i++) {
-    let act1 = act(index + 1);
-    index = act1 !== undefined ? act1 : index;
-  }
+  const benchmark = (iterations: number) => {
+    let total = 0;
 
-  let end = performance.now();
+    const iteration = () => {
+      let start = performance.now();
 
-  console.log(`time it took to execute ${count} action calls: ${Math.round(end - start)}ms, ${index}`);
+      for (let i = 0; i < count; i++) {
+        let act1 = act(index + 1);
+        index = act1 !== undefined ? act1 : index;
+      }
+
+      let end = performance.now();
+
+      return end - start;
+    };
+
+    for (let j = 0; j < iterations; j++) {
+      total += iteration();
+    }
+
+    return Math.round(total / iterations);
+  };
+
+  console.log(`time it took to ${count} action calls: ${benchmark(10)}ms`);
 });

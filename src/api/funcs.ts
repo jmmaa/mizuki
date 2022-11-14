@@ -1,32 +1,5 @@
-import { greater, lesser } from "./operators";
-
-export const createTimeout = () => {
-  let timeout: any = null;
-
-  const _timeout = (delay: number) => {
-    if (delay > 0) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        clearTimeout(timeout);
-        timeout = null;
-      }, delay);
-    }
-  };
-
-  const _isTimedOut = () => (timeout !== null ? true : false);
-
-  return {
-    isTimedOut: _isTimedOut,
-    timeout: _timeout,
-  };
-};
-
-type Options = {
-  min?: number;
-  max?: number;
-  loop?: boolean;
-  delay?: number;
-};
+import { indexGreaterThanMaxConfig, indexLesserThanMinConfig, isDefined } from "./operators";
+import { createTimeout } from "./utils";
 
 export const createAction = (options?: Options) => {
   const { timeout, isTimedOut } = createTimeout();
@@ -38,21 +11,20 @@ export const createAction = (options?: Options) => {
     ...options,
   };
 
-  const minDefined = min !== undefined;
-  const maxDefined = max !== undefined;
-
-  const loopingToMax = loop && maxDefined;
-  const loopingToMin = loop && minDefined;
+  const lesserThanMin = indexLesserThanMinConfig(min);
+  const greaterThanMax = indexGreaterThanMaxConfig(max);
+  const loopingToMax = loop && isDefined(max);
+  const loopingToMin = loop && isDefined(min);
 
   return (index: number) => {
     if (isTimedOut()) return;
 
-    if (minDefined ? greater(min, index) : false) {
+    if (lesserThanMin(index)) {
       if (loopingToMax) {
         timeout(delay);
         return max;
       }
-    } else if (maxDefined ? lesser(max, index) : false) {
+    } else if (greaterThanMax(index)) {
       if (loopingToMin) {
         timeout(delay);
         return min;
@@ -61,33 +33,5 @@ export const createAction = (options?: Options) => {
       timeout(delay);
       return index;
     }
-  };
-};
-
-export const createAnimation = () => {
-  let previousTransitionValue = 0;
-
-  return (callback: (delta: number, previous: number) => (() => number) | undefined, duration: number) => {
-    let start = performance.now();
-    const rAF = requestAnimationFrame;
-
-    const _animate = () => {
-      let now = performance.now();
-      const delta = Math.min((now - start) / duration, 1);
-
-      // return value will set the transition value after recursion
-      let getTransitionValueOnFinish = callback(delta, previousTransitionValue);
-
-      if (delta < 1) {
-        // reanimate remaining frames
-        rAF(_animate);
-      } else {
-        // set value for referencing last transition to next transition
-        if (getTransitionValueOnFinish === undefined) return;
-        previousTransitionValue = getTransitionValueOnFinish();
-      }
-    };
-
-    rAF(_animate);
   };
 };

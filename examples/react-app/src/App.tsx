@@ -8,42 +8,39 @@ const ease = bezier(0.25, 0.1, 0.25, 1.0);
 const useAnimate = () => React.useRef(mizuki.createAnimation()).current;
 const useAction = (options: any) => React.useRef(mizuki.createAction(options)).current;
 
-export default function MyFullpage() {
-  // FIX THIS
-
+function MyFullpage() {
   const indexRef = React.useRef(0);
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+
   const setter = useAction({ delay: 1000, min: 0, max: 3 });
   const animate = useAnimate();
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
 
   const wheelHandler = (event: any) => {
     if (event.deltaY > 0) {
       const newIndex = setter(indexRef.current + 1);
 
       if (newIndex === undefined) return;
-      console.log(newIndex);
       indexRef.current = newIndex;
 
-      animate((delta, previousTransitionValue) => {
+      animate((delta, units) => {
         if (scrollerRef.current === null) return;
-        const transitionValue = previousTransitionValue - ease(delta) * 100;
-        scrollerRef.current.style.transform = `translate3d(0, ${transitionValue}vh, 0)`;
+        let transitionUnits = units + ease(delta) * -100;
+        scrollerRef.current.style.transform = `translate3d(0, ${transitionUnits}vh, 0)`;
 
-        return () => transitionValue;
+        return () => transitionUnits;
       }, 1000);
     } else if (event.deltaY < 0) {
       const newIndex = setter(indexRef.current - 1);
 
       if (newIndex === undefined) return;
-      console.log(newIndex);
       indexRef.current = newIndex;
 
-      animate((delta, previousTransitionValue) => {
+      animate((delta, units) => {
         if (scrollerRef.current === null) return;
-        const transitionValue = previousTransitionValue + ease(delta) * 100;
-        scrollerRef.current.style.transform = `translate3d(0, ${transitionValue}vh, 0)`;
+        let transitionUnits = units + ease(delta) * 100;
+        scrollerRef.current.style.transform = `translate3d(0, ${transitionUnits}vh, 0)`;
 
-        return () => transitionValue;
+        return () => transitionUnits;
       }, 1000);
     }
   };
@@ -64,6 +61,16 @@ export default function MyFullpage() {
         <div style={{ width: "100vw", height: "100vh", background: "#fc6c7c" }}>Ena</div>
         <div style={{ width: "100vw", height: "100vh", background: "#fec401" }}>Mizuki</div>
       </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
+
+  return (
+    <div onClick={() => forceUpdate()}>
+      <MyFullpage />
     </div>
   );
 }
