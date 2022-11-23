@@ -1,48 +1,69 @@
 import mizuki from "../src";
 
-test("create action func", () => {
-  let index = 0;
+test("createTransitionFunction", () => {
+  let index: number = 0;
 
-  const act = mizuki.createAction();
+  const transition = mizuki.createTransitionFunction({ max: 3, min: 0, loop: true });
 
-  let act1 = act(index + 1);
-  index = act1 !== undefined ? act1 : index;
-
+  index = transition(index, (index) => index + 1);
   expect(index).toEqual(1);
 
-  let act2 = act(index - 1);
-  index = act2 !== undefined ? act2 : index;
+  index = transition(index, (index) => index + 2);
+  expect(index).toEqual(3);
 
+  index = transition(index, (index) => index + 1);
   expect(index).toEqual(0);
+
+  index = transition(index, (index) => index - 1);
+  expect(index).toEqual(3);
+
+  index = transition(index, (index) => index - 2);
+  expect(index).toEqual(1);
 });
 
-test("benchmark create action func", () => {
-  const act = mizuki.createAction({ delay: 0, min: 0, loop: true, max: 5 });
-  let index = 0;
-  const count = 100_000_000;
+test("createState", () => {
+  const [get, set] = mizuki.createState(0);
 
-  const benchmark = (iterations: number) => {
-    let total = 0;
+  expect(get()).toEqual(0);
 
-    const iteration = () => {
-      let start = performance.now();
+  set((index) => {
+    return index + 1;
+  });
 
-      for (let i = 0; i < count; i++) {
-        let act1 = act(index + 1);
-        index = act1 !== undefined ? act1 : index;
-      }
+  expect(get()).toEqual(1);
 
-      let end = performance.now();
+  set((index) => {
+    return index + 69;
+  });
 
-      return end - start;
-    };
+  set((index) => {
+    return index + 100;
+  });
 
-    for (let j = 0; j < iterations; j++) {
-      total += iteration();
-    }
+  set((index) => {
+    return index + 100;
+  });
 
-    return Math.round(total / iterations);
-  };
+  set(() => {
+    return 7;
+  });
 
-  console.log(`time it took to ${count} action calls: ${benchmark(10)}ms`);
+  expect(get()).toEqual(7);
+});
+
+test("createObserver", () => {
+  const [notify, subscribe] = mizuki.createObserver<number>();
+  let curr = 0;
+  subscribe((value) => {
+    expect(value).toEqual(curr);
+  });
+
+  notify(curr);
+  curr += 1;
+
+  notify(curr);
+
+  curr -= 1;
+
+  notify(curr);
 });

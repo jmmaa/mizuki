@@ -1,9 +1,7 @@
-import * as opts from "./operators";
-import * as funcs from "./funcs";
+import * as core from "./core";
 import * as utils from "./utils";
 
 export default {
-  ...funcs,
-  ...opts,
+  ...core,
   ...utils,
 };

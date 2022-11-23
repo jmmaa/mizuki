@@ -4,44 +4,57 @@ import React from "react";
 
 const ease = bezier(0.25, 0.1, 0.25, 1.0);
 
-// custom hooks for mizuki
+// custom hooks for mizuki v2
+
+const useMizukiState = <T,>(state: T) => React.useRef(mizuki.createState<T>(state)).current;
+const useTransition = (options: any) => React.useRef(mizuki.createTransitionFunction(options)).current;
+const useTimeout = () => React.useRef(mizuki.createTimeout()).current;
 const useAnimate = () => React.useRef(mizuki.createAnimation()).current;
-const useAction = (options: any) => React.useRef(mizuki.createAction(options)).current;
 
 function MyFullpage() {
-  const indexRef = React.useRef(0);
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useMizukiState(0);
+  const [timeout, isTimedout] = useTimeout();
 
-  const setter = useAction({ delay: 1000, min: 0, max: 3 });
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const transition = useTransition({ delay: 1000, min: 0, max: 3 });
+
   const animate = useAnimate();
 
-  const wheelHandler = (event: any) => {
+  const wheelHandler = (event: WheelEvent) => {
+    if (isTimedout()) return;
+
     if (event.deltaY > 0) {
-      const newIndex = setter(indexRef.current + 1);
+      const oldIndex = index();
+      const newIndex = transition(oldIndex, (index) => index + 1);
+      if (newIndex === oldIndex) return;
 
-      if (newIndex === undefined) return;
-      indexRef.current = newIndex;
+      setIndex(() => newIndex);
 
       animate((delta, units) => {
         if (scrollerRef.current === null) return;
-        let transitionUnits = units + ease(delta) * -100;
-        scrollerRef.current.style.transform = `translate3d(0, ${transitionUnits}vh, 0)`;
+        let newUnits = units + ease(delta) * -100;
+        scrollerRef.current.style.transform = `translate3d(0, ${newUnits}vh, 0)`;
 
-        return () => transitionUnits;
+        return () => newUnits;
       }, 1000);
+
+      timeout(1000);
     } else if (event.deltaY < 0) {
-      const newIndex = setter(indexRef.current - 1);
+      const oldIndex = index();
+      const newIndex = transition(oldIndex, (index) => index - 1);
+      if (newIndex === oldIndex) return;
 
-      if (newIndex === undefined) return;
-      indexRef.current = newIndex;
+      setIndex(() => newIndex);
 
       animate((delta, units) => {
         if (scrollerRef.current === null) return;
-        let transitionUnits = units + ease(delta) * 100;
-        scrollerRef.current.style.transform = `translate3d(0, ${transitionUnits}vh, 0)`;
+        let newUnits = units + ease(delta) * 100;
+        scrollerRef.current.style.transform = `translate3d(0, ${newUnits}vh, 0)`;
 
-        return () => transitionUnits;
+        return () => newUnits;
       }, 1000);
+
+      timeout(1000);
     }
   };
 
