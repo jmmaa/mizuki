@@ -1,15 +1,14 @@
 # CHANGELOG.md
 
-# 1.1.6 (unreleased)
+# 2.0.0-dev (unreleased)
 
 Improvements:
 
 - updated examples
-- updated tests
 
 New:
 
-- mizuki API and handlers, for flexible configurations/custom paginated component engines.
+- api rewrite
 
 # 1.0.6 (31/10/2022)
 

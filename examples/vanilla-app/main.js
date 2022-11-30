@@ -1,48 +1,57 @@
 import './style.css'
-import {vanilla} from "mizuki"
+import mizuki from "mizuki"
+import bezier from 'bezier-easing'
+
+
+const scroller = document.querySelector(".scroller")
+const scrollerContent = document.querySelector(".scroller-content")
+const ease = bezier(0.25, 0.1, 0.25, 1.0)
 
 
 
-// declare a handler
-const { get, set, autoplay } = vanilla({ delay:500, bounds: { min: 0, max: 3 }, loop: true, init: 0 , auto: true})
+const animate = mizuki.createAnimation()
+const onWheel =  mizuki.createEventObserver(scroller, "wheel")
+const [timeout, isTimedout] = mizuki.createTimeout()
+const [allowedToGo] = mizuki.createIndexTracker({max: 3, min: 0, loop: false})
 
-// elements
-const incrementButton =document.querySelector(".inc")
-const decrementButton = document.querySelector(".dec")
-const subscribeButton = document.querySelector(".sub")
-const counter = document.querySelector(".counter")
+const wheelHandler = (event) => {
+    if (isTimedout()) return; // throttle if timeout still persists
 
+    if (event.deltaY > 0) {
 
+      if (allowedToGo((index) => index + 1)) { // check if allowed to go to the next slide
 
+        animate({ units: -100, duration: 1000 }, (units) => {
 
-autoplay.interval.subscribe(() => {
-  if (autoplay.timeout.persists()) return
-  console.log("working")
-  set((index) => index + 1)
-  counter.innerHTML = get() 
-})
+          // apply style changes here every frame
+          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
+        }, 1000)
 
-autoplay.interval.start(2000)
+        timeout(1000); // timeout for 1 seconds after changing slide
+      }
 
-counter.innerHTML = get() // get the initial index
+      
+    } else if (event.deltaY < 0) {
 
+      if (allowedToGo((index) => index - 1)) {
 
-incrementButton.addEventListener("click", () => {
-  autoplay.timeout.start(2000)
-  set((index) => index + 1) // set the index
-  counter.innerHTML = get() // update the index
-})
+        animate({ units: 100, duration: 1000 }, (units) => {
 
-decrementButton.addEventListener("click", () => {
-  autoplay.timeout.start(2000)
-  set((index) => index - 1)
-  counter.innerHTML = get()
+          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
 
-})
+        }, 1000)
 
-// subscribeButton.addEventListener("click", () => {
+        timeout(1000);
 
-// })
+      }
+    }
+  };
 
 
+
+onWheel(wheelHandler)
+
+// scroller.addEventListener("wheel", wheelHandler)
+
+// TRY WRAPPING THE EVENT IN createState
 
