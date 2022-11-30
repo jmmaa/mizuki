@@ -1,23 +1,21 @@
 import mizuki from "../src";
 
-test("createTransitionFunction", () => {
+test("calculate index", () => {
   let index: number = 0;
 
-  const transition = mizuki.createTransitionFunction({ max: 3, min: 0, loop: true });
-
-  index = transition(index, (index) => index + 1);
+  index = mizuki.calculate(index + 1, 3, 0, true);
   expect(index).toEqual(1);
 
-  index = transition(index, (index) => index + 2);
+  index = mizuki.calculate(index + 2, 3, 0, true);
   expect(index).toEqual(3);
 
-  index = transition(index, (index) => index + 1);
+  index = mizuki.calculate(index + 1, 3, 0, true);
   expect(index).toEqual(0);
 
-  index = transition(index, (index) => index - 1);
+  index = mizuki.calculate(index - 1, 3, 0, true);
   expect(index).toEqual(3);
 
-  index = transition(index, (index) => index - 2);
+  index = mizuki.calculate(index - 2, 3, 0, true);
   expect(index).toEqual(1);
 });
 
