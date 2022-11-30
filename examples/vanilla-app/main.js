@@ -8,54 +8,50 @@ const scrollerContent = document.querySelector(".scroller-content")
 const ease = bezier(0.25, 0.1, 0.25, 1.0)
 
 
+
 const animate = mizuki.createAnimation()
-const transition = mizuki.createTransitionFunction({max: 3, min: 0, loop: false})
+const onWheel =  mizuki.createEventObserver(scroller, "wheel")
 const [timeout, isTimedout] = mizuki.createTimeout()
-const [index, setIndex] = mizuki.createState(0)
-
-
+const [allowedToGo] = mizuki.createIndexTracker({max: 3, min: 0, loop: false})
 
 const wheelHandler = (event) => {
-    if (isTimedout()) return;
+    if (isTimedout()) return; // throttle if timeout still persists
 
     if (event.deltaY > 0) {
-      const oldIndex = index();
-      const newIndex = transition(oldIndex, (index) => index + 1);
-      if (newIndex === oldIndex) return;
 
-      setIndex(() => newIndex);
+      if (allowedToGo((index) => index + 1)) { // check if allowed to go to the next slide
 
-      animate((delta, units) => {
-        if (scroller === null) return;
-        let newUnits = units + ease(delta) * -100;
-        scrollerContent.style.transform = `translate3d(0, ${newUnits}vh, 0)`;
+        animate({ units: -100, duration: 1000 }, (units) => {
 
-        return () => newUnits;
-      }, 1000);
+          // apply style changes here every frame
+          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
+        }, 1000)
 
-      timeout(1000);
+        timeout(1000); // timeout for 1 seconds after changing slide
+      }
+
+      
     } else if (event.deltaY < 0) {
-      const oldIndex = index();
-      const newIndex = transition(oldIndex, (index) => index - 1);
-      if (newIndex === oldIndex) return;
 
-      setIndex(() => newIndex);
+      if (allowedToGo((index) => index - 1)) {
 
-      animate((delta, units) => {
-        if (scroller === null) return;
-        let newUnits = units + ease(delta) * 100;
-        scrollerContent.style.transform = `translate3d(0, ${newUnits}vh, 0)`;
+        animate({ units: 100, duration: 1000 }, (units) => {
 
-        return () => newUnits;
-      }, 1000);
+          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
 
-      timeout(1000);
+        }, 1000)
+
+        timeout(1000);
+
+      }
     }
   };
 
 
 
-scroller.addEventListener("wheel", wheelHandler)
+onWheel(wheelHandler)
+
+// scroller.addEventListener("wheel", wheelHandler)
 
 // TRY WRAPPING THE EVENT IN createState
 

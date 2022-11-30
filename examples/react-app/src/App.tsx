@@ -6,69 +6,55 @@ const ease = bezier(0.25, 0.1, 0.25, 1.0);
 
 // custom hooks for mizuki v2
 
-const useMizukiState = <T,>(state: T) => React.useRef(mizuki.createState<T>(state)).current;
-const useTransition = (options: any) => React.useRef(mizuki.createTransitionFunction(options)).current;
+const useTracker = (options: any) => React.useRef(mizuki.createIndexTracker(options)).current;
 const useTimeout = () => React.useRef(mizuki.createTimeout()).current;
 const useAnimate = () => React.useRef(mizuki.createAnimation()).current;
 
 function MyFullpage() {
-  const [index, setIndex] = useMizukiState(0);
-  const [timeout, isTimedout] = useTimeout();
-
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
-  const transition = useTransition({ delay: 1000, min: 0, max: 3 });
+  const [transformValue, setTransformValue] = React.useState(0);
 
   const animate = useAnimate();
 
-  const wheelHandler = (event: WheelEvent) => {
-    if (isTimedout()) return;
+  const [allowedToGo] = useTracker({ delay: 1000, min: 0, max: 3 });
+  const [timeout, isTimedout] = useTimeout();
 
-    if (event.deltaY > 0) {
-      const oldIndex = index();
-      const newIndex = transition(oldIndex, (index) => index + 1);
-      if (newIndex === oldIndex) return;
+  const createWheelHandler = (el: HTMLElement | null) => {
+    return (event: any) => {
+      if (isTimedout()) return;
 
-      setIndex(() => newIndex);
+      if (event.deltaY > 0) {
+        if (!allowedToGo((index) => index + 1)) return;
 
-      animate((delta, units) => {
-        if (scrollerRef.current === null) return;
-        let newUnits = units + ease(delta) * -100;
-        scrollerRef.current.style.transform = `translate3d(0, ${newUnits}vh, 0)`;
+        if (el === null) return;
+        animate({ units: -100, duration: 1000 }, (units) => {
+          el.style.transform = `translate3d(0, ${units}vh, 0)`;
+        });
 
-        return () => newUnits;
-      }, 1000);
+        timeout(1000);
+      } else if (event.deltaY < 0) {
+        if (!allowedToGo((index) => index - 1)) return;
 
-      timeout(1000);
-    } else if (event.deltaY < 0) {
-      const oldIndex = index();
-      const newIndex = transition(oldIndex, (index) => index - 1);
-      if (newIndex === oldIndex) return;
+        if (el === null) return;
+        animate({ units: 100, duration: 1000 }, (units) => {
+          el.style.transform = `translate3d(0, ${units}vh, 0)`;
+        });
 
-      setIndex(() => newIndex);
-
-      animate((delta, units) => {
-        if (scrollerRef.current === null) return;
-        let newUnits = units + ease(delta) * 100;
-        scrollerRef.current.style.transform = `translate3d(0, ${newUnits}vh, 0)`;
-
-        return () => newUnits;
-      }, 1000);
-
-      timeout(1000);
-    }
+        timeout(1000);
+      }
+    };
   };
 
   React.useEffect(() => {
-    if (scrollerRef.current === null) return;
+    const scroller = document.querySelector(".scroller") as HTMLElement;
+    const onWheel = mizuki.createEventObserver(scroller, "wheel");
 
-    scrollerRef.current.addEventListener("wheel", wheelHandler);
-
-    return () => scrollerRef.current?.removeEventListener("wheel", wheelHandler);
-  });
+    let unsub = onWheel(createWheelHandler(scroller));
+    return () => unsub();
+  }, []);
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflowY: "hidden" }}>
-      <div className="scroller" ref={scrollerRef}>
+      <div className="scroller">
         <div style={{ width: "100vw", height: "100vh", background: "#ff5f45" }}>Kanade</div>
         <div style={{ width: "100vw", height: "100vh", background: "#0798ec" }}>Mafuyu</div>
         <div style={{ width: "100vw", height: "100vh", background: "#fc6c7c" }}>Ena</div>
