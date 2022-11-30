@@ -29,8 +29,50 @@ If you want it to be less painful to implement your own scroller, fullpage, swip
 
 # How to Use
 
+```ts
+const animate = mizuki.createAnimation();
+const onWheel = mizuki.createEventObserver(scroller, "wheel");
+const [timeout, isTimedout] = mizuki.createTimeout();
+const [allowedToGo] = mizuki.createIndexTracker({ max: 3, min: 0, loop: false });
+
+const wheelHandler = (event) => {
+  if (isTimedout()) return; // throttle if timeout still persists
+
+  if (event.deltaY > 0) {
+    if (allowedToGo((index) => index + 1)) {
+      // check if allowed to go to the next slide
+
+      animate(
+        { units: -100, duration: 1000 },
+        (units) => {
+          // apply style changes here every frame
+          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
+        },
+        1000
+      );
+
+      timeout(1000); // timeout for 1 seconds after changing slide
+    }
+  } else if (event.deltaY < 0) {
+    if (allowedToGo((index) => index - 1)) {
+      animate(
+        { units: 100, duration: 1000 },
+        (units) => {
+          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
+        },
+        1000
+      );
+
+      timeout(1000);
+    }
+  }
+};
+
+onWheel(wheelHandler);
+```
+
 TODO
 
 # Examples
 
-Examples are in [here](https://github.com/jmmaa/mizuki/tree/main/examples)
+More examples in [here](https://github.com/jmmaa/mizuki/tree/main/examples)
