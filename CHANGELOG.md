@@ -5,8 +5,6 @@
 Improvements:
 
 - updated examples
-- updated tests
-- changed API
 
 New:
 
