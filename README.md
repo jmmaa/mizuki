@@ -1,6 +1,6 @@
 # Mizuki
 
-A javascript library for helping you build your own pagination
+A javascript library to make your own pagination
 
 ### yarn
 
@@ -20,7 +20,8 @@ npm install mizuki
 
 ##### Features
 
-- Simple and minimalistic API
+- React-like API
+- supports `requestAnimationFrame` as a utility
 - No dependencies
 
 # Why?
@@ -29,50 +30,58 @@ If you want it to be less painful to implement your own scroller, fullpage, swip
 
 # How to Use
 
+TODO
+
+# Examples
+
 ```ts
-const animate = mizuki.createAnimation();
-const onWheel = mizuki.createEventObserver(scroller, "wheel");
+import mizuki from "mizuki";
+import bezier from "bezier-easing";
+
+const ease = bezier(0.25, 0.1, 0.25, 1.0); // ease timing function
+const scroller = document.querySelector(".scroller");
+const scrollerContent = document.querySelector(".scroller-content")
+
+const [allowedToGo] = mizuki.createTracker({ max: 3, min: 0, loop: false });
 const [timeout, isTimedout] = mizuki.createTimeout();
-const [allowedToGo] = mizuki.createIndexTracker({ max: 3, min: 0, loop: false });
+const [getLastUnits, setLastUnits] = mizuki.createState(0);
 
 const wheelHandler = (event) => {
   if (isTimedout()) return; // throttle if timeout still persists
 
-  if (event.deltaY > 0) {
-    if (allowedToGo((index) => index + 1)) {
-      // check if allowed to go to the next slide
+  if (event.deltaY < 0) { // go 
+    
+    if (allowedToGo((index) => index - 1)) { // check if allowed to go to the next slide
 
-      animate(
-        { units: -100, duration: 1000 },
-        (units) => {
-          // apply style changes here every frame
-          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
-        },
-        1000
-      );
+      mizuki.createAnimation({ duration: 1000 }, (delta) => {
 
-      timeout(1000); // timeout for 1 seconds after changing slide
+        const transformValue = getLastUnits() + ease(delta) * 100;
+        scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+
+        return () => setLastUnits(() => transformValue); // this will execute after requestAnimationFrame loop
+      });
+
+
+      timeout(1000); // timeout for 1 second after changing slide
     }
-  } else if (event.deltaY < 0) {
-    if (allowedToGo((index) => index - 1)) {
-      animate(
-        { units: 100, duration: 1000 },
-        (units) => {
-          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
-        },
-        1000
-      );
+  } else if (event.deltaY > 0) {
+
+    if (allowedToGo((index) => index + 1)) {
+
+      mizuki.createAnimation({ duration: 1000 }, (delta) => {
+
+        const transformValue = getLastUnits() + ease(delta) * -100;
+        scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+
+        return () => setLastUnits(() => transformValue);
+      });
 
       timeout(1000);
     }
   }
 };
 
-onWheel(wheelHandler);
+scroller.addEventListener("wheel", wheelHandler);
 ```
 
-TODO
-
-# Examples
-
-More examples in [here](https://github.com/jmmaa/mizuki/tree/main/examples)
+More info of it in [here](https://github.com/jmmaa/mizuki/tree/main/examples)
