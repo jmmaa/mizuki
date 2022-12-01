@@ -34,6 +34,8 @@ TODO
 
 # Examples
 
+![alt text](https://i.ibb.co/MCknBjL/mizuki-sample.gif)
+
 ```ts
 import mizuki from "mizuki";
 import bezier from "bezier-easing";
