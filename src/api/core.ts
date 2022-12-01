@@ -35,3 +35,26 @@ export const createObserver = <T>(): [NotifyFunc<T>, SubscribeFunc<T>] => {
 
   return [notify, subscribe];
 };
+
+export const calculate = (
+  index: number,
+  max: number | undefined,
+  min: number | undefined,
+  loop: boolean
+) => {
+  if (min !== undefined && index < min) {
+    if (loop && max !== undefined) {
+      return max;
+    } else {
+      return min;
+    }
+  } else if (max !== undefined && index > max) {
+    if (loop && min !== undefined) {
+      return min;
+    } else {
+      return max;
+    }
+  } else {
+    return index;
+  }
+};

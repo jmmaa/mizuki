@@ -1,30 +1,28 @@
-import { createObserver, createState, NotifyFunc, SetStateAction, SubscribeFunc } from "./core";
+import { createObserver, createState, NotifyFunc, SetStateAction, SubscribeFunc, calculate } from "./core";
 
-export const createAnimation = () => {
-  const [animationUnits, setAnimationUnits] = createState(0);
+export const delta = (initial: number, final: number) => final - initial;
+export const timedelta = (initial: number, final: number, time: number) => delta(initial, final) / time;
+export const rAF = requestAnimationFrame;
 
-  return (options: { units: number; duration: number }, callback: (units: number) => void) => {
-    const { units, duration } = options;
-    let start = performance.now();
+export const createAnimation = (
+  options: { duration: number },
+  callback: (delta: number) => (() => void) | undefined
+) => {
+  const { duration } = options;
+  const animate = (initial: number, final: number) => {
+    const delta = Math.min(timedelta(initial, final, duration), 1);
+    const finished = callback(delta);
 
-    const rAF = requestAnimationFrame;
-    const animate = () => {
-      let now = performance.now();
-      const delta = Math.min((now - start) / duration, 1);
-
-      const lastAnimationUnits = animationUnits() + delta * units;
-
-      callback(lastAnimationUnits);
-
-      if (delta < 1) {
-        rAF(animate);
-      } else {
-        setAnimationUnits(() => lastAnimationUnits);
-      }
-    };
-
-    rAF(animate);
+    if (delta < 1) {
+      rAF((ts: number) => animate(initial, ts));
+    } else {
+      if (finished !== undefined) finished();
+    }
   };
+
+  rAF((initial: number) => {
+    rAF((ts: number) => animate(initial, ts));
+  });
 };
 
 export const createEventObserver = <T>(el: Element | null, type: string) => {
@@ -55,24 +53,6 @@ export const createEventObserver = <T>(el: Element | null, type: string) => {
   return subscribe;
 };
 
-export const calculate = (newIndex: number, max: number | undefined, min: number | undefined, loop: boolean) => {
-  if (min !== undefined && newIndex < min) {
-    if (loop && max !== undefined) {
-      return max;
-    } else {
-      return min;
-    }
-  } else if (max !== undefined && newIndex > max) {
-    if (loop && min !== undefined) {
-      return min;
-    } else {
-      return max;
-    }
-  } else {
-    return newIndex;
-  }
-};
-
 export type TimeoutFunc = (delay: number) => void;
 export type IsTimedOutFunc = () => boolean;
 
@@ -94,14 +74,14 @@ export const createTimeout = (): [TimeoutFunc, IsTimedOutFunc] => {
   return [timeout, isTimedOut];
 };
 
-export type IndexTrackerOptions = {
+export type TrackerOptions = {
   min?: number;
   max?: number;
   loop?: boolean;
   init?: number;
 };
 
-export const createIndexTracker = (options?: IndexTrackerOptions) => {
+export const createTracker = (options?: TrackerOptions) => {
   const { min, max, loop, init } = {
     min: undefined,
     max: undefined,
