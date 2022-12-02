@@ -1,14 +1,26 @@
-import { createObserver, createState, NotifyFunc, SetStateAction, SubscribeFunc, calculate } from "./core";
+import {
+  createObserver,
+  createState,
+  NotifyFunc,
+  SetStateAction,
+  SubscribeFunc,
+  calculate,
+  StateGetterFunc,
+  StateSetterFunc,
+} from "./core";
 
-export const delta = (initial: number, final: number) => final - initial;
-export const timedelta = (initial: number, final: number, time: number) => delta(initial, final) / time;
-export const rAF = requestAnimationFrame;
+import { timedelta } from "./funcs";
 
-export const createAnimation = (
-  options: { duration: number },
-  callback: (delta: number) => (() => void) | undefined
-) => {
+export type FrameCallback = (delta: number) => (() => void) | undefined;
+export type AnimationOptions = {
+  duration: number;
+};
+
+export const createAnimation = (options: AnimationOptions, callback: FrameCallback) => {
+  const rAF = requestAnimationFrame;
+
   const { duration } = options;
+
   const animate = (initial: number, final: number) => {
     const delta = Math.min(timedelta(initial, final, duration), 1);
     const finished = callback(delta);
@@ -25,11 +37,11 @@ export const createAnimation = (
   });
 };
 
-export const createEventObserver = <T>(el: Element | null, type: string) => {
-  const [_notify, _subscribe] = createObserver<T>();
+export const createEventObserver = <T>(el: Element | null, type: string): SubscribeFunc<T> => {
+  const [notify, sub] = createObserver<T>();
 
   const handler = (event: Event) => {
-    _notify(<T>event);
+    notify(<T>event);
   };
   if (el !== null) {
     el.addEventListener(type, handler);
@@ -42,7 +54,7 @@ export const createEventObserver = <T>(el: Element | null, type: string) => {
   };
 
   const subscribe: SubscribeFunc<T> = (callback: NotifyFunc<T>) => {
-    let unsub = _subscribe(callback);
+    let unsub = sub(callback);
 
     return () => {
       unsub();
@@ -57,7 +69,7 @@ export type TimeoutFunc = (delay: number) => void;
 export type IsTimedOutFunc = () => boolean;
 
 export const createTimeout = (): [TimeoutFunc, IsTimedOutFunc] => {
-  let [get, set] = createState<NodeJS.Timeout | null>(null);
+  const [get, set] = createState<NodeJS.Timeout | null>(null);
 
   const timeout = (delay: number) => {
     if (delay > 0) {
@@ -74,14 +86,18 @@ export const createTimeout = (): [TimeoutFunc, IsTimedOutFunc] => {
   return [timeout, isTimedOut];
 };
 
-export type TrackerOptions = {
+export type ControllerOptions = {
   min?: number;
   max?: number;
   loop?: boolean;
   init?: number;
 };
 
-export const createTracker = (options?: TrackerOptions) => {
+export type ValidatorFunc<T> = (setter: SetStateAction<T>) => boolean;
+
+export const createController = (
+  options?: ControllerOptions
+): [StateGetterFunc<number>, StateSetterFunc<number>, ValidatorFunc<number>] => {
   const { min, max, loop, init } = {
     min: undefined,
     max: undefined,
@@ -91,18 +107,15 @@ export const createTracker = (options?: TrackerOptions) => {
     ...options,
   };
 
-  const [index, setIndex] = createState(init);
+  const [getIndex, setIndex] = createState(init);
 
-  const allowedToGo = (setter: SetStateAction<number>) => {
-    const oldIndex = index();
+  const validate = (setter: SetStateAction<number>) => {
+    const oldIndex = getIndex();
     const newIndex = calculate(setter(oldIndex), max, min, loop);
 
     if (newIndex === oldIndex) return false;
-
-    setIndex(() => newIndex);
-
     return true;
   };
 
-  return [allowedToGo];
+  return [getIndex, setIndex, validate];
 };
