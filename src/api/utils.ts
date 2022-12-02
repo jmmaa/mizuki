@@ -1,37 +1,47 @@
-import { createObserver, createState, NotifyFunc, SetStateAction, SubscribeFunc } from "./core";
+import {
+  createObserver,
+  createState,
+  NotifyFunc,
+  SetStateAction,
+  SubscribeFunc,
+  calculate,
+  StateGetterFunc,
+  StateSetterFunc,
+} from "./core";
 
-export const createAnimation = () => {
-  const [animationUnits, setAnimationUnits] = createState(0);
+import { timedelta } from "./funcs";
 
-  return (options: { units: number; duration: number }, callback: (units: number) => void) => {
-    const { units, duration } = options;
-    let start = performance.now();
-
-    const rAF = requestAnimationFrame;
-    const animate = () => {
-      let now = performance.now();
-      const delta = Math.min((now - start) / duration, 1);
-
-      const lastAnimationUnits = animationUnits() + delta * units;
-
-      callback(lastAnimationUnits);
-
-      if (delta < 1) {
-        rAF(animate);
-      } else {
-        setAnimationUnits(() => lastAnimationUnits);
-      }
-    };
-
-    rAF(animate);
-  };
+export type FrameCallback = (delta: number) => (() => void) | undefined;
+export type AnimationOptions = {
+  duration: number;
 };
 
-export const createEventObserver = <T>(el: Element | null, type: string) => {
-  const [_notify, _subscribe] = createObserver<T>();
+export const createAnimation = (options: AnimationOptions, callback: FrameCallback) => {
+  const rAF = requestAnimationFrame;
+
+  const { duration } = options;
+
+  const animate = (initial: number, final: number) => {
+    const delta = Math.min(timedelta(initial, final, duration), 1);
+    const finished = callback(delta);
+
+    if (delta < 1) {
+      rAF((ts: number) => animate(initial, ts));
+    } else {
+      if (finished !== undefined) finished();
+    }
+  };
+
+  rAF((initial: number) => {
+    rAF((ts: number) => animate(initial, ts));
+  });
+};
+
+export const createEventObserver = <T>(el: Element | null, type: string): SubscribeFunc<T> => {
+  const [notify, sub] = createObserver<T>();
 
   const handler = (event: Event) => {
-    _notify(<T>event);
+    notify(<T>event);
   };
   if (el !== null) {
     el.addEventListener(type, handler);
@@ -44,7 +54,7 @@ export const createEventObserver = <T>(el: Element | null, type: string) => {
   };
 
   const subscribe: SubscribeFunc<T> = (callback: NotifyFunc<T>) => {
-    let unsub = _subscribe(callback);
+    let unsub = sub(callback);
 
     return () => {
       unsub();
@@ -55,29 +65,11 @@ export const createEventObserver = <T>(el: Element | null, type: string) => {
   return subscribe;
 };
 
-export const calculate = (newIndex: number, max: number | undefined, min: number | undefined, loop: boolean) => {
-  if (min !== undefined && newIndex < min) {
-    if (loop && max !== undefined) {
-      return max;
-    } else {
-      return min;
-    }
-  } else if (max !== undefined && newIndex > max) {
-    if (loop && min !== undefined) {
-      return min;
-    } else {
-      return max;
-    }
-  } else {
-    return newIndex;
-  }
-};
-
 export type TimeoutFunc = (delay: number) => void;
 export type IsTimedOutFunc = () => boolean;
 
 export const createTimeout = (): [TimeoutFunc, IsTimedOutFunc] => {
-  let [get, set] = createState<NodeJS.Timeout | null>(null);
+  const [get, set] = createState<NodeJS.Timeout | null>(null);
 
   const timeout = (delay: number) => {
     if (delay > 0) {
@@ -94,14 +86,18 @@ export const createTimeout = (): [TimeoutFunc, IsTimedOutFunc] => {
   return [timeout, isTimedOut];
 };
 
-export type IndexTrackerOptions = {
+export type ControllerOptions = {
   min?: number;
   max?: number;
   loop?: boolean;
   init?: number;
 };
 
-export const createIndexTracker = (options?: IndexTrackerOptions) => {
+export type ValidatorFunc<T> = (setter: SetStateAction<T>) => boolean;
+
+export const createController = (
+  options?: ControllerOptions
+): [StateGetterFunc<number>, StateSetterFunc<number>, ValidatorFunc<number>] => {
   const { min, max, loop, init } = {
     min: undefined,
     max: undefined,
@@ -111,18 +107,15 @@ export const createIndexTracker = (options?: IndexTrackerOptions) => {
     ...options,
   };
 
-  const [index, setIndex] = createState(init);
+  const [getIndex, setIndex] = createState(init);
 
-  const allowedToGo = (setter: SetStateAction<number>) => {
-    const oldIndex = index();
+  const validate = (setter: SetStateAction<number>) => {
+    const oldIndex = getIndex();
     const newIndex = calculate(setter(oldIndex), max, min, loop);
 
     if (newIndex === oldIndex) return false;
-
-    setIndex(() => newIndex);
-
     return true;
   };
 
-  return [allowedToGo];
+  return [getIndex, setIndex, validate];
 };

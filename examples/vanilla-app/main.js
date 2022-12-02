@@ -3,55 +3,65 @@ import mizuki from "mizuki"
 import bezier from 'bezier-easing'
 
 
-const scroller = document.querySelector(".scroller")
+const ease = bezier(0.25, 0.1, 0.25, 1.0);
+const scroller = document.querySelector(".scroller");
 const scrollerContent = document.querySelector(".scroller-content")
-const ease = bezier(0.25, 0.1, 0.25, 1.0)
+
+const [, go, canGo] = mizuki.createController({ max: 3, min: 0, loop: false });
+const [timeout, timedout] = mizuki.createTimeout();
+const [getLastUnits, setLastUnits] = mizuki.createState(0);
 
 
 
-const animate = mizuki.createAnimation()
-const onWheel =  mizuki.createEventObserver(scroller, "wheel")
-const [timeout, isTimedout] = mizuki.createTimeout()
-const [allowedToGo] = mizuki.createIndexTracker({max: 3, min: 0, loop: false})
+const next = (index) => index + 1
+const prev = (index) => index - 1
 
 const wheelHandler = (event) => {
-    if (isTimedout()) return; // throttle if timeout still persists
+  if (timedout()) return; // debounce if timeout still persists
 
-    if (event.deltaY > 0) {
+  if (event.deltaY > 0) {
+    
+    if (canGo(next)) { // check if allowed to go to the next slide
 
-      if (allowedToGo((index) => index + 1)) { // check if allowed to go to the next slide
+      go(next) // set the new index
+      timeout(1000); // start timeout for 1 second after setting index
 
-        animate({ units: -100, duration: 1000 }, (units) => {
+      // animate the element using createAnimation
+      mizuki.createAnimation({ duration: 1000 }, (delta) => { 
 
-          // apply style changes here every frame
-          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
-        }, 1000)
+        const transformValue = getLastUnits() + ease(delta) * -100;
+        scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
 
-        timeout(1000); // timeout for 1 seconds after changing slide
-      }
+        return () => { // this will execute after the last frame of requestAnimationFrame loop
 
-      
-    } else if (event.deltaY < 0) {
+          setLastUnits(() => transformValue) // save last position for next animation
 
-      if (allowedToGo((index) => index - 1)) {
-
-        animate({ units: 100, duration: 1000 }, (units) => {
-
-          scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
-
-        }, 1000)
-
-        timeout(1000);
-
-      }
+        };
+      });
     }
-  };
 
+  } else if (event.deltaY < 0) {
 
+    if (canGo(prev)) {
 
-onWheel(wheelHandler)
+      go(prev);
+      timeout(1000);
 
-// scroller.addEventListener("wheel", wheelHandler)
+      mizuki.createAnimation({ duration: 1000 }, (delta) => {
 
-// TRY WRAPPING THE EVENT IN createState
+        const transformValue = getLastUnits() + ease(delta) * 100;
+        scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+
+        return () => { 
+
+          setLastUnits(() => transformValue)
+
+        };
+      });
+    }
+  }
+};
+
+scroller.addEventListener("wheel", wheelHandler);
+
 
