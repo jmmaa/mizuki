@@ -1,6 +1,6 @@
 # Mizuki
 
-A javascript library to make your own pagination
+A javascript library to make your own pagination with full control and flexibility
 
 ### yarn
 
@@ -20,8 +20,9 @@ npm install mizuki
 
 ##### Features
 
-- React-like API
-- supports `requestAnimationFrame` as a utility
+- Solid.js-like API
+- framework agnostic
+- tiny (`1.1kb minified`)
 - No dependencies
 
 # Why?
@@ -33,6 +34,8 @@ If you want it to be less painful to implement your own scroller, fullpage, swip
 TODO
 
 # Examples
+
+![alt text](https://i.ibb.co/MCknBjL/mizuki-sample.gif)
 
 ```ts
 import mizuki from "mizuki";
