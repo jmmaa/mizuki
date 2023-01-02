@@ -1,60 +1,56 @@
-export type SetStateAction<T> = (state: T) => T;
-export type StateGetterFunc<T> = () => T;
-export type StateSetterFunc<T> = (setter: SetStateAction<T>) => void;
+export type StateGetter<T> = () => T;
+export type StateSetter<T> = (value: T) => void;
 
-export const createState = <T>(state: T): [StateGetterFunc<T>, StateSetterFunc<T>] => {
-  const read = () => state;
+const context: (() => void)[] = [];
+const getCurrentObserver = () => context[context.length - 1];
 
-  const write = (setter: SetStateAction<T>) => {
-    state = setter(state);
+export const createSignal = <T>(state: T): [StateGetter<T>, StateSetter<T>] => {
+  const subscribers = new Set<() => void>();
+
+  const read = () => {
+    const curr = getCurrentObserver();
+    if (curr) subscribers.add(curr);
+
+    return state;
+  };
+
+  const write = (newValue: T) => {
+    state = newValue;
+
+    for (const sub of subscribers) sub();
   };
 
   return [read, write];
 };
 
-export type NotifyFunc<T> = (value: T) => void;
-export type UnsubscribeFunc<T> = () => void;
-export type SubscribeFunc<T> = (callback: NotifyFunc<T>) => UnsubscribeFunc<T>;
+export const createEffect = (callback: () => void) => {
+  const execute = () => {
+    context.push(execute);
 
-export const createObserver = <T>(): [NotifyFunc<T>, SubscribeFunc<T>] => {
-  let subs = new Set<(value: T) => void>();
-
-  const notify = (value: T) => {
-    for (let sub of subs) {
-      sub(value);
+    try {
+      callback();
+    } finally {
+      context.pop();
     }
   };
-
-  const subscribe = (callback: (value: T) => void) => {
-    subs.add(callback);
-
-    return () => {
-      subs.delete(callback);
-    };
-  };
-
-  return [notify, subscribe];
+  execute();
 };
 
-export const calculate = (
-  index: number,
-  max: number | undefined,
-  min: number | undefined,
-  loop: boolean
-) => {
-  if (min !== undefined && index < min) {
-    if (loop && max !== undefined) {
-      return max;
-    } else {
-      return min;
+export type TimeoutFunc = (delay: number) => void;
+export type IsTimedOutFunc = () => boolean;
+
+export const createTimeout = (): [TimeoutFunc, IsTimedOutFunc] => {
+  let timeoutState: any = null;
+
+  const timeout = (delay: number) => {
+    if (delay > 0) {
+      timeoutState = setTimeout(() => {
+        timeoutState = null;
+      }, delay);
     }
-  } else if (max !== undefined && index > max) {
-    if (loop && min !== undefined) {
-      return min;
-    } else {
-      return max;
-    }
-  } else {
-    return index;
-  }
+  };
+
+  const isTimedOut = () => (timeoutState !== null ? true : false);
+
+  return [timeout, isTimedOut];
 };

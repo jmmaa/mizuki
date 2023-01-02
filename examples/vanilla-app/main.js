@@ -7,61 +7,117 @@ const ease = bezier(0.25, 0.1, 0.25, 1.0);
 const scroller = document.querySelector(".scroller");
 const scrollerContent = document.querySelector(".scroller-content")
 
-const [, go, canGo] = mizuki.createController({ max: 3, min: 0, loop: false });
-const [timeout, timedout] = mizuki.createTimeout();
-const [getLastUnits, setLastUnits] = mizuki.createState(0);
+const scrollerButtonNext = document.querySelector(".next")
+const scrollerButtonPrev = document.querySelector(".prev")
+const scrollerButtonStart = document.querySelector(".start")
+const scrollerButtonEnd = document.querySelector(".end")
+const scrollerIndex = document.querySelector(".index")
+
+
+// MAKE A VERSION OF THIS WITHOUT USING THE OLD API
+let lastIndex = 0
+let currIndex = 0
+
+// reactive
+const [index, setIndex] = mizuki.createSignal(0)
+
+// utils
+const [timeout, timedout] = mizuki.createTimeout()
 
 
 
-const next = (index) => index + 1
-const prev = (index) => index - 1
+const calc = (index) => {
+  const min = 0
+  const max = 4
 
-const wheelHandler = (event) => {
-  if (timedout()) return; // debounce if timeout still persists
+  if (index < min) return min
+  else if (index > max) return max
+  else return index
+}
 
-  if (event.deltaY > 0) {
-    
-    if (canGo(next)) { // check if allowed to go to the next slide
 
-      go(next) // set the new index
-      timeout(1000); // start timeout for 1 second after setting index
+const transition = () => {
 
-      // animate the element using createAnimation
-      mizuki.createAnimation({ duration: 1000 }, (delta) => { 
+  if (currIndex === lastIndex) return
+  timeout(700)
 
-        const transformValue = getLastUnits() + ease(delta) * -100;
-        scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+  const offsets = [0, -100, -200, -300, -330]
 
-        return () => { // this will execute after the last frame of requestAnimationFrame loop
+  const currIndexValue = offsets[currIndex]
+  const lastIndexValue = offsets[lastIndex]
 
-          setLastUnits(() => transformValue) // save last position for next animation
+  const displacement =  currIndexValue - lastIndexValue
 
-        };
-      });
-    }
+  lastIndex = currIndex
+  
+  mizuki.animate(700, (delta) => {
 
-  } else if (event.deltaY < 0) {
+    const units =  lastIndexValue + ease(delta) * displacement
+    scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
 
-    if (canGo(prev)) {
+  });
+}
 
-      go(prev);
-      timeout(1000);
 
-      mizuki.createAnimation({ duration: 1000 }, (delta) => {
+// ABSTACT THIS (IDK FOR NOW BUT HOPEFULLY SOON I CAN)
+// MAYBE MAKE THE API MORE ON REACTION-CENTRIC
+// event listeners
+scrollerButtonNext.addEventListener("click", () => {
+  if (timedout()) return
+  setIndex(calc(index() + 1))
+})
+scrollerButtonPrev.addEventListener("click", () => {
+  if (timedout()) return
+  setIndex(calc(index() - 1))
+})
+scrollerButtonStart.addEventListener("click", () => {
+  if (timedout()) return
+  setIndex(0)
+})
+scrollerButtonEnd.addEventListener("click", () => {
+  if (timedout()) return
+  setIndex(3)
+})
 
-        const transformValue = getLastUnits() + ease(delta) * 100;
-        scrollerContent.style.transform = `translate3d(0, ${transformValue}vh, 0)`;
+scroller.addEventListener("wheel", (e) => {
+  if (timedout()) return
 
-        return () => { 
+  if (e.deltaY > 0) {
+    setIndex(calc(index() + 1))
 
-          setLastUnits(() => transformValue)
-
-        };
-      });
-    }
+  } else if (e.deltaY < 0) {
+    setIndex(calc(index() - 1))
   }
-};
 
-scroller.addEventListener("wheel", wheelHandler);
+})
 
 
+
+
+mizuki.createEffect(() => {
+  scrollerIndex.innerHTML = index()
+})
+
+mizuki.createEffect(() => {
+
+  const currIndex = index();
+  if (currIndex === lastIndex) return
+  timeout(700)
+
+  const offsets = [0, -100, -200, -300, -330]
+
+  const currIndexValue = offsets[currIndex]
+  const lastIndexValue = offsets[lastIndex]
+
+  const displacement =  currIndexValue - lastIndexValue
+
+  lastIndex = currIndex
+  
+  mizuki.animate(700, (delta) => {
+
+    const units =  lastIndexValue + ease(delta) * displacement
+    scrollerContent.style.transform = `translate3d(0, ${units}vh, 0)`;
+
+  });
+
+})

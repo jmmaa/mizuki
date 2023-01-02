@@ -1,7 +1,7 @@
 {
   "name": "mizuki",
-  "version": "2.0.0",
-  "description": "a tiny javascript library that helps you create your own pagination behavior",
+  "version": "0.0.1",
+  "description": "",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",

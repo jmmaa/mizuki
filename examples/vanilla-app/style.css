@@ -121,3 +121,12 @@ button:focus-visible {
 .scroller-section.s4 {
   background-color: #e4a8ca;
 }
+
+.scroller-section.s5 {
+  background-color: black;
+}
+
+.scroller-btn-container {
+  position: absolute;
+  z-index: 9999;
+}
